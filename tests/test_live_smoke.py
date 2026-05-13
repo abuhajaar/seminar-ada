@@ -35,7 +35,9 @@ def test_pipeline_end_to_end(tmp_path: Path):
 
     trades = pd.read_parquet(aggtrades_parquet_path(symbol, root=tmp_path))
     cvd_df = aggregate_cvd(trades, timeframe=tf)
-    cvd_df.to_parquet(cvd_parquet_path(symbol, tf, root=tmp_path), index=False)
+    cvd_path = cvd_parquet_path(symbol, tf, root=tmp_path)
+    cvd_path.parent.mkdir(parents=True, exist_ok=True)
+    cvd_df.to_parquet(cvd_path, index=False)
 
     bars = list(load_bars(symbol, tf, start, end, root=tmp_path))
     assert len(bars) == 24
