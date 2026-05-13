@@ -5,12 +5,18 @@ Comparative analysis of heuristic vs cognitive multi-agent crypto trading system
 ## Status
 
 **Sub-plan A complete:** data layer, indicators, config, types.
-- Download Binance OHLCV (via ccxt) and aggTrades (via REST), aggregate CVD per bar, stream bars as `core.types.Bar`.
-- Vectorized RSI, MACD, ADX, EMA, SuperTrend in `indicators/ta.py`, validated against `pandas-ta`.
+**Sub-plan B complete:** execution layer (portfolio, broker, metrics) + Traditional bot + sync engine harness.
 
-Test suite: 32 passing, 1 skipped (live network smoke), 96% line coverage on `core/`, `data/`, `indicators/`.
+- Data: download Binance OHLCV (ccxt) + aggTrades (REST), aggregate CVD per bar.
+- Indicators: RSI, MACD, ADX, EMA, SuperTrend (vectorized, validated against pandas-ta).
+- Execution: shared portfolio + broker with next-bar fills, taker fees, slippage, intra-bar stops.
+- Metrics: Total Return, MDD, Win Rate, Profit Factor, Sharpe.
+- Traditional bot: indicator-confluence rule with SuperTrend stops + 2%-risk sizing.
+- Engine: synchronous single-strategy harness (async dual-strategy + TUI in sub-plan D).
 
-**Next:** sub-plan B — execution layer (portfolio, broker, metrics) + traditional bot + minimal sync engine.
+Test suite: 79 passing, 1 skipped (live network smoke), 97% line coverage on `core/`, `data/`, `indicators/`, `strategies/`.
+
+**Next:** sub-plan C — LLM agent subsystem (4 LangGraph nodes + cache + budget guard + MockClient).
 
 ## Setup
 
@@ -37,4 +43,5 @@ $env:RUN_LIVE_TESTS = $null
 ## Plans
 
 - Sub-plan A: `docs/superpowers/plans/2026-05-13-sub-plan-A-data-and-indicators.md` (complete)
-- Sub-plans B/C/D: TBD after A is reviewed.
+- Sub-plan B: `docs/superpowers/plans/2026-05-13-sub-plan-B-execution-and-traditional-bot.md` (complete)
+- Sub-plans C/D: TBD.
