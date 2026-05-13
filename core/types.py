@@ -70,6 +70,7 @@ class Trade:
     qty: float
     side: Action  # Action.BUY for long, Action.SELL for short
     fees: float
+    symbol: str = "PORTFOLIO"
 
     @property
     def pnl(self) -> float:
