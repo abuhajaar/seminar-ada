@@ -68,3 +68,54 @@ def macd(
     signal_line = ema(macd_line.dropna(), signal).reindex(series.index)
     hist = macd_line - signal_line
     return pd.DataFrame({"macd": macd_line, "signal": signal_line, "hist": hist})
+
+
+def _true_range(high: pd.Series, low: pd.Series, close: pd.Series) -> pd.Series:
+    prev_close = close.shift(1)
+    tr = pd.concat(
+        [(high - low), (high - prev_close).abs(), (low - prev_close).abs()], axis=1
+    ).max(axis=1)
+    return tr
+
+
+def adx(high: pd.Series, low: pd.Series, close: pd.Series, length: int = 14) -> pd.Series:
+    """Wilder's ADX matching `pandas-ta.adx(...)['ADX_14']`.
+
+    pandas-ta's recipe (no TA-Lib path):
+      * ATR uses TR with the first ``length-1`` values set to NaN and the
+        value at ``length-1`` seeded with ``SMA(TR[:length])``, then a
+        Wilder RMA (``ewm(alpha=1/length, adjust=False).mean()``).
+      * +DM / -DM are smoothed by a *plain* RMA on the raw series (no
+        SMA seeding, no ``min_periods``), so values exist from index 0.
+      * DX = 100 * |DMP - DMN| / (DMP + DMN), then ADX = RMA(DX) again
+        without seeding. This produces ADX values starting at index
+        ``length-1`` (driven by ATR's NaN burn-in).
+    """
+    _check_length(length, "adx")
+    alpha = 1.0 / length
+
+    # +DM / -DM with pandas-ta's drift=1 sign convention. The leading NaN
+    # at index 0 (from .shift(1)) is preserved so pandas' ewm starts the
+    # recursion at index 1, matching pandas-ta's `rma`.
+    up = high - high.shift(1)
+    dn = low.shift(1) - low
+    pos = (((up > dn) & (up > 0)) * up).astype(float)
+    neg = (((dn > up) & (dn > 0)) * dn).astype(float)
+
+    # ATR: SMA-seeded Wilder RMA of TR.
+    tr = _true_range(high, low, close).astype(float)
+    tr_seeded = tr.copy()
+    if len(tr_seeded) >= length:
+        seed = float(tr_seeded.iloc[:length].mean())
+        tr_seeded.iloc[: length - 1] = float("nan")
+        tr_seeded.iloc[length - 1] = seed
+    atr_ = tr_seeded.ewm(alpha=alpha, adjust=False).mean()
+
+    k = 100.0 / atr_
+    dmp = k * pos.ewm(alpha=alpha, adjust=False).mean()
+    dmn = k * neg.ewm(alpha=alpha, adjust=False).mean()
+
+    dx = 100.0 * (dmp - dmn).abs() / (dmp + dmn)
+    adx_line = dx.ewm(alpha=alpha, adjust=False).mean()
+    adx_line.name = "adx"
+    return adx_line

@@ -7,7 +7,7 @@ import pandas as pd
 import pandas_ta as pta
 import pytest
 
-from indicators.ta import ema, macd, rsi
+from indicators.ta import adx, ema, macd, rsi
 
 
 def test_ema_matches_pandas_ta(synth_ohlcv: pd.DataFrame):
@@ -50,4 +50,15 @@ def test_macd_matches_pandas_ta(synth_ohlcv: pd.DataFrame):
     )
     np.testing.assert_allclose(
         ours["hist"].values, ref["MACDh_12_26_9"].loc[ours.index].values, rtol=1e-10
+    )
+
+
+def test_adx_matches_pandas_ta(synth_ohlcv: pd.DataFrame):
+    df = synth_ohlcv
+    ours = adx(df["high"], df["low"], df["close"], length=14).dropna()
+    ref = pta.adx(df["high"], df["low"], df["close"], length=14).dropna()
+    # pandas-ta column: ADX_14
+    idx = ours.index.intersection(ref.index)
+    np.testing.assert_allclose(
+        ours.loc[idx].values, ref["ADX_14"].loc[idx].values, rtol=5e-3
     )
