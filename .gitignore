@@ -18,6 +18,12 @@ results/plots/
 !tests/fixtures/
 !tests/fixtures/**
 
+# Build / tool artifacts
+.coverage
+.coverage.*
+htmlcov/
+uv.lock
+
 # OS
 .DS_Store
 Thumbs.db
