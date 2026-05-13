@@ -44,7 +44,9 @@ def load_bars(
 
     start_ts = pd.Timestamp(_to_utc_dt(start))
     end_ts = pd.Timestamp(_to_utc_dt(end))
-    ohlcv = ohlcv[(ohlcv["timestamp"] >= start_ts) & (ohlcv["timestamp"] < end_ts)].reset_index(drop=True)
+    ohlcv = ohlcv[
+        (ohlcv["timestamp"] >= start_ts) & (ohlcv["timestamp"] < end_ts)
+    ].reset_index(drop=True)
     cvd = cvd[(cvd["timestamp"] >= start_ts) & (cvd["timestamp"] < end_ts)].reset_index(drop=True)
 
     if len(ohlcv) == 0:
