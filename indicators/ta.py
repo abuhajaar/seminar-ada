@@ -7,6 +7,7 @@ the EMA's smoothing factor is `2 / (length + 1)`.
 
 from __future__ import annotations
 
+import numpy as np
 import pandas as pd
 
 
@@ -119,3 +120,79 @@ def adx(high: pd.Series, low: pd.Series, close: pd.Series, length: int = 14) -> 
     adx_line = dx.ewm(alpha=alpha, adjust=False).mean()
     adx_line.name = "adx"
     return adx_line
+
+
+def supertrend(
+    high: pd.Series,
+    low: pd.Series,
+    close: pd.Series,
+    length: int = 10,
+    multiplier: float = 3.0,
+) -> pd.DataFrame:
+    """SuperTrend trailing stop.
+
+    Returns DataFrame with:
+        st  : the trailing stop line
+        dir : +1 when in long regime (line below price), -1 when short.
+    """
+    _check_length(length, "supertrend")
+    if multiplier <= 0:
+        raise ValueError(f"supertrend multiplier must be positive, got {multiplier}")
+
+    hl2 = (high + low) / 2.0
+    tr = _true_range(high, low, close).astype(float)
+    tr_seeded = tr.copy()
+    if len(tr_seeded) >= length:
+        seed = float(tr_seeded.iloc[:length].mean())
+        tr_seeded.iloc[: length - 1] = float("nan")
+        tr_seeded.iloc[length - 1] = seed
+    atr = tr_seeded.ewm(alpha=1.0 / length, adjust=False).mean()
+
+    upper_basic = hl2 + multiplier * atr
+    lower_basic = hl2 - multiplier * atr
+
+    n = len(close)
+    upper = upper_basic.copy()
+    lower = lower_basic.copy()
+    direction = np.full(n, np.nan)
+    st = np.full(n, np.nan)
+
+    # First valid index = first non-NaN ATR
+    first_valid = atr.first_valid_index()
+    if first_valid is None:
+        return pd.DataFrame({"st": st, "dir": direction}, index=close.index)
+    start = close.index.get_loc(first_valid)
+
+    direction[start] = 1
+    st[start] = lower.iloc[start]
+
+    upper_arr = upper.to_numpy(copy=True)
+    lower_arr = lower.to_numpy(copy=True)
+    upper_basic_arr = upper_basic.to_numpy(copy=True)
+    lower_basic_arr = lower_basic.to_numpy(copy=True)
+    close_arr = close.to_numpy(copy=True)
+
+    for i in range(start + 1, n):
+        # Trailing-stop "carry forward" rule from Olorunnimbe / TradingView
+        if upper_basic_arr[i] < upper_arr[i - 1] or close_arr[i - 1] > upper_arr[i - 1]:
+            upper_arr[i] = upper_basic_arr[i]
+        else:
+            upper_arr[i] = upper_arr[i - 1]
+        if lower_basic_arr[i] > lower_arr[i - 1] or close_arr[i - 1] < lower_arr[i - 1]:
+            lower_arr[i] = lower_basic_arr[i]
+        else:
+            lower_arr[i] = lower_arr[i - 1]
+
+        prev_dir = direction[i - 1]
+        if prev_dir == 1:
+            direction[i] = -1 if close_arr[i] < lower_arr[i] else 1
+        else:
+            direction[i] = 1 if close_arr[i] > upper_arr[i] else -1
+        st[i] = lower_arr[i] if direction[i] == 1 else upper_arr[i]
+
+    # pandas-ta convention: direction is NaN at the seed row (st has a value
+    # there but no direction is emitted until the next bar). We mirror that
+    # so test indices keyed off `st.dropna()` get a clean direction overlap.
+    direction[start] = np.nan
+
+    return pd.DataFrame({"st": st, "dir": direction.astype(float)}, index=close.index)
