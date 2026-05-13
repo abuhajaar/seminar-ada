@@ -10,8 +10,13 @@ venv/
 
 # Data & cache
 data/cache/
+cache/llm/
 results/runs/
 results/plots/
+
+# Allow committed test fixtures
+!tests/fixtures/
+!tests/fixtures/**
 
 # OS
 .DS_Store
