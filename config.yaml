@@ -1,0 +1,35 @@
+run:
+  assets: [BTC/USDT, ETH/USDT, SOL/USDT]
+  timeframe: 1h
+  start: 2025-04-01
+  end:   2025-04-21
+  initial_balance: 10000
+
+execution:
+  fill: next_bar_open
+  taker_fee_bps: 4
+  slippage_bps: 2
+  risk_pct: 0.02
+
+indicators:
+  rsi: 14
+  macd: [12, 26, 9]
+  adx: 14
+  ema_fast: 20
+  ema_slow: 50
+  supertrend: [10, 3]
+
+llm:
+  cache_dir: cache/llm
+  max_usd: 10.00
+  agents:
+    technical: { model: anthropic/claude-3.5-sonnet, temperature: 0 }
+    visual:    { model: anthropic/claude-3.5-sonnet, temperature: 0, chart_window: 100 }
+    qabba:     { model: anthropic/claude-3.5-sonnet, temperature: 0, lookback: 50 }
+    decision:  { model: anthropic/claude-3.5-sonnet, temperature: 0 }
+  consensus_weights: { qabba: 0.40, visual: 0.35, technical: 0.25 }
+  consensus_threshold: 0.50
+
+data:
+  source: binance
+  qabba_mode: aggtrades
