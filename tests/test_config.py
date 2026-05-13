@@ -57,9 +57,20 @@ def test_load_config_from_repo_root(tmp_path: Path):
 def test_consensus_weights_must_sum_to_one(tmp_path: Path):
     cfg_path = tmp_path / "config.yaml"
     cfg_path.write_text(dedent("""
-        run: { assets: [BTC/USDT], timeframe: 1h, start: 2025-04-01, end: 2025-04-21, initial_balance: 10000 }
+        run:
+          assets: [BTC/USDT]
+          timeframe: 1h
+          start: 2025-04-01
+          end: 2025-04-21
+          initial_balance: 10000
         execution: { fill: next_bar_open, taker_fee_bps: 4, slippage_bps: 2, risk_pct: 0.02 }
-        indicators: { rsi: 14, macd: [12,26,9], adx: 14, ema_fast: 20, ema_slow: 50, supertrend: [10,3] }
+        indicators:
+          rsi: 14
+          macd: [12,26,9]
+          adx: 14
+          ema_fast: 20
+          ema_slow: 50
+          supertrend: [10,3]
         llm:
           cache_dir: cache/llm
           max_usd: 10
@@ -79,9 +90,20 @@ def test_consensus_weights_must_sum_to_one(tmp_path: Path):
 def test_qabba_mode_only_aggtrades(tmp_path: Path):
     cfg_path = tmp_path / "config.yaml"
     cfg_path.write_text(dedent("""
-        run: { assets: [BTC/USDT], timeframe: 1h, start: 2025-04-01, end: 2025-04-21, initial_balance: 10000 }
+        run:
+          assets: [BTC/USDT]
+          timeframe: 1h
+          start: 2025-04-01
+          end: 2025-04-21
+          initial_balance: 10000
         execution: { fill: next_bar_open, taker_fee_bps: 4, slippage_bps: 2, risk_pct: 0.02 }
-        indicators: { rsi: 14, macd: [12,26,9], adx: 14, ema_fast: 20, ema_slow: 50, supertrend: [10,3] }
+        indicators:
+          rsi: 14
+          macd: [12,26,9]
+          adx: 14
+          ema_fast: 20
+          ema_slow: 50
+          supertrend: [10,3]
         llm:
           cache_dir: cache/llm
           max_usd: 10
