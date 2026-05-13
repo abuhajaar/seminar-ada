@@ -69,6 +69,9 @@ class Broker:
             # Same direction → ignore (no pyramiding in sub-plan B).
             return
 
+        if order.stop_loss is None:
+            return  # close-only order; position already gone (e.g., stop hit between queue and fill)
+
         self.portfolio.open_position(
             action=order.action, price=fill_price, quantity=order.quantity,
             fee=fee, stop_loss=order.stop_loss, timestamp=next_bar.timestamp,

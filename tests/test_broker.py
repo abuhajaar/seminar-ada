@@ -162,3 +162,28 @@ def test_stop_check_does_not_close_when_not_hit():
     bar = _bar(1, open_=98.0, high=99.0, low=96.0, close=97.0)  # never touches 95
     b.check_stops(bar)
     assert p.position is not None
+
+
+def test_close_only_order_no_ops_when_position_already_gone():
+    """If a stop fires between queue and fill, the queued close-only order
+    must NOT open a fresh position in the close direction."""
+    p = Portfolio(initial_balance=10_000.0)
+    b = Broker(portfolio=p, taker_fee_bps=4.0, slippage_bps=2.0)
+    # Open a long with stop
+    bar0 = _bar(0, open_=100.0, high=101.0, low=99.0, close=100.0)
+    p.open_position(
+        action=Action.BUY, price=100.0, quantity=1.0, fee=0.0,
+        stop_loss=95.0, timestamp=bar0.timestamp,
+    )
+    # Engine queues a close on bar t (SELL, qty=1.0, stop_loss=None)
+    b.queue(Order(
+        symbol="BTC/USDT", action=Action.SELL, quantity=1.0, stop_loss=None,
+        created_ts_ms=int(bar0.timestamp.timestamp() * 1000),
+    ))
+    # Bar t+1: stop hits intra-bar; check_stops closes position
+    bar1 = _bar(1, open_=96.0, high=97.0, low=94.0, close=95.0)
+    b.check_stops(bar1)
+    assert p.position is None  # stop closed it
+    # Now fill_pending runs; must not reopen
+    b.fill_pending(bar1)
+    assert p.position is None
