@@ -46,10 +46,11 @@ def test_cvd_basic_aggregation():
         }
     )
     out = aggregate_cvd(df, timeframe="1h")
-    assert list(out.columns) == ["timestamp", "cvd_delta", "cvd"]
+    assert list(out.columns) == ["timestamp", "cvd_delta", "cvd", "taker_buy_volume"]
     assert len(out) == 2
     np.testing.assert_array_equal(out["cvd_delta"].values, [5.0, 2.0])
     np.testing.assert_array_equal(out["cvd"].values, [5.0, 7.0])
+    np.testing.assert_array_equal(out["taker_buy_volume"].values, [10.0, 8.0])
     assert out["timestamp"].iloc[0] == pd.Timestamp("2025-04-01 00:00", tz="UTC")
     assert out["timestamp"].iloc[1] == pd.Timestamp("2025-04-01 01:00", tz="UTC")
 
@@ -58,7 +59,7 @@ def test_cvd_empty_input():
     df = pd.DataFrame(columns=["agg_id", "price", "qty", "ts", "is_buyer_maker"])
     out = aggregate_cvd(df, timeframe="1h")
     assert len(out) == 0
-    assert list(out.columns) == ["timestamp", "cvd_delta", "cvd"]
+    assert list(out.columns) == ["timestamp", "cvd_delta", "cvd", "taker_buy_volume"]
 
 
 def test_cvd_unsupported_timeframe():

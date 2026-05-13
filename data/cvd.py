@@ -23,19 +23,25 @@ def aggregate_cvd(trades: pd.DataFrame, timeframe: str) -> pd.DataFrame:
             f"Unsupported timeframe '{timeframe}'. Supported: {sorted(_TF_TO_PANDAS)}"
         )
     if len(trades) == 0:
-        return pd.DataFrame(columns=["timestamp", "cvd_delta", "cvd"])
+        return pd.DataFrame(columns=["timestamp", "cvd_delta", "cvd", "taker_buy_volume"])
 
     df = trades.copy()
     df["timestamp"] = pd.to_datetime(df["ts"], unit="ms", utc=True)
     # signed_qty: +qty for buy (is_buyer_maker=False), -qty for sell
     df["signed_qty"] = df["qty"].where(~df["is_buyer_maker"], -df["qty"])
-
-    grouped = (
+    df["buy_qty"] = df["qty"].where(~df["is_buyer_maker"], 0.0)
+    grouped_signed = (
         df.set_index("timestamp")["signed_qty"]
         .resample(_TF_TO_PANDAS[timeframe], label="left", closed="left")
         .sum()
         .rename("cvd_delta")
-        .to_frame()
     )
-    grouped["cvd"] = grouped["cvd_delta"].cumsum()
-    return grouped.reset_index()
+    grouped_buy = (
+        df.set_index("timestamp")["buy_qty"]
+        .resample(_TF_TO_PANDAS[timeframe], label="left", closed="left")
+        .sum()
+        .rename("taker_buy_volume")
+    )
+    out = pd.concat([grouped_signed, grouped_buy], axis=1)
+    out["cvd"] = out["cvd_delta"].cumsum()
+    return out.reset_index()[["timestamp", "cvd_delta", "cvd", "taker_buy_volume"]]
