@@ -22,6 +22,8 @@ indicators:
 llm:
   cache_dir: cache/llm
   max_usd: 10.00
+  mock: false
+  image_window_bars: 60
   agents:
     technical: { model: anthropic/claude-3.5-sonnet, temperature: 0 }
     visual:    { model: anthropic/claude-3.5-sonnet, temperature: 0, chart_window: 100 }

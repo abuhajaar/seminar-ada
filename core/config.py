@@ -50,10 +50,21 @@ class AgentCfg(BaseModel):
     chart_window: int | None = None
     lookback: int | None = None
 
+    @field_validator("temperature")
+    @classmethod
+    def _temperature_must_be_zero(cls, v: float) -> float:
+        if v != 0:
+            raise ValueError(
+                "LLM temperature must be 0 for deterministic backtests (spec Q2)."
+            )
+        return v
+
 
 class LlmCfg(BaseModel):
     cache_dir: str
     max_usd: float
+    mock: bool = False
+    image_window_bars: int = 60
     agents: dict[str, AgentCfg]
     consensus_weights: dict[str, float]
     consensus_threshold: float

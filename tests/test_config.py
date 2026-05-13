@@ -3,8 +3,9 @@ from pathlib import Path
 from textwrap import dedent
 
 import pytest
+from pydantic import ValidationError
 
-from core.config import AppConfig, load_config
+from core.config import AgentCfg, AppConfig, LlmCfg, load_config
 
 
 def test_load_config_from_repo_root(tmp_path: Path):
@@ -118,3 +119,26 @@ def test_qabba_mode_only_aggtrades(tmp_path: Path):
     """))
     with pytest.raises(ValueError, match="qabba_mode"):
         load_config(cfg_path)
+
+
+def test_agent_cfg_rejects_nonzero_temperature():
+    """Spec Q2 mandates temperature=0 for deterministic backtests."""
+    with pytest.raises(ValidationError):
+        AgentCfg(model="anthropic/claude-3.5-sonnet", temperature=0.7)
+
+
+def test_agent_cfg_accepts_zero_temperature():
+    a = AgentCfg(model="anthropic/claude-3.5-sonnet", temperature=0.0)
+    assert a.temperature == 0.0
+
+
+def test_llm_cfg_has_mock_and_image_window_defaults():
+    cfg = LlmCfg(
+        cache_dir="cache/llm",
+        max_usd=1.0,
+        agents={"technical": AgentCfg(model="x/y", temperature=0)},
+        consensus_weights={"qabba": 0.40, "visual": 0.35, "technical": 0.25},
+        consensus_threshold=0.50,
+    )
+    assert cfg.mock is False
+    assert cfg.image_window_bars == 60
