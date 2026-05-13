@@ -59,3 +59,33 @@ def test_trade_pnl_property():
     )
     # gross = (110 - 100) * 2 = 20; net = 20 - 0.5 = 19.5
     assert t.pnl == pytest.approx(19.5)
+
+
+def test_order_construction():
+    from core.types import Action, Order
+
+    o = Order(
+        symbol="BTC/USDT",
+        action=Action.BUY,
+        quantity=0.5,
+        stop_loss=60000.0,
+        created_ts_ms=1_700_000_000_000,
+    )
+    assert o.symbol == "BTC/USDT"
+    assert o.action is Action.BUY
+    assert o.quantity == 0.5
+    assert o.stop_loss == 60000.0
+    assert o.created_ts_ms == 1_700_000_000_000
+
+
+def test_order_is_frozen():
+    from dataclasses import FrozenInstanceError
+
+    from core.types import Action, Order
+
+    o = Order(
+        symbol="ETH/USDT", action=Action.SELL, quantity=1.0,
+        stop_loss=None, created_ts_ms=0,
+    )
+    with pytest.raises(FrozenInstanceError):
+        o.quantity = 2.0  # type: ignore[misc]

@@ -76,3 +76,18 @@ class Trade:
         direction = 1.0 if self.side is Action.BUY else -1.0
         gross = (self.exit_price - self.entry_price) * self.qty * direction
         return gross - self.fees
+
+
+@dataclass(frozen=True)
+class Order:
+    """A pending order, queued at bar t and filled at bar[t+1].open.
+
+    `quantity` is in base-asset units (e.g. BTC), always positive.
+    `action` indicates direction (BUY = open/extend long, SELL = close/flip).
+    `stop_loss` is the SuperTrend-derived stop price; sizing was computed against it.
+    """
+    symbol: str
+    action: Action
+    quantity: float
+    stop_loss: float | None
+    created_ts_ms: int
