@@ -7,7 +7,7 @@ import pandas as pd
 import pandas_ta as pta
 import pytest
 
-from indicators.ta import ema, rsi
+from indicators.ta import ema, macd, rsi
 
 
 def test_ema_matches_pandas_ta(synth_ohlcv: pd.DataFrame):
@@ -35,3 +35,19 @@ def test_rsi_matches_pandas_ta(synth_ohlcv: pd.DataFrame):
 def test_rsi_bounds(synth_ohlcv: pd.DataFrame):
     r = rsi(synth_ohlcv["close"], length=14).dropna()
     assert (r >= 0).all() and (r <= 100).all()
+
+
+def test_macd_matches_pandas_ta(synth_ohlcv: pd.DataFrame):
+    close = synth_ohlcv["close"]
+    ours = macd(close, fast=12, slow=26, signal=9).dropna()
+    ref = pta.macd(close, fast=12, slow=26, signal=9).dropna()
+    # pandas-ta names: MACD_12_26_9, MACDh_12_26_9, MACDs_12_26_9
+    np.testing.assert_allclose(
+        ours["macd"].values, ref["MACD_12_26_9"].loc[ours.index].values, rtol=1e-10
+    )
+    np.testing.assert_allclose(
+        ours["signal"].values, ref["MACDs_12_26_9"].loc[ours.index].values, rtol=1e-10
+    )
+    np.testing.assert_allclose(
+        ours["hist"].values, ref["MACDh_12_26_9"].loc[ours.index].values, rtol=1e-10
+    )

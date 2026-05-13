@@ -50,3 +50,21 @@ def rsi(series: pd.Series, length: int = 14) -> pd.Series:
     avg_loss = loss.ewm(alpha=1 / length, adjust=False, min_periods=length).mean()
     rs = avg_gain / avg_loss
     return 100 - (100 / (1 + rs))
+
+
+def macd(
+    series: pd.Series, fast: int = 12, slow: int = 26, signal: int = 9
+) -> pd.DataFrame:
+    """MACD = EMA(fast) - EMA(slow); signal = EMA(MACD, signal); hist = MACD - signal.
+
+    Returns a DataFrame with columns `macd`, `signal`, `hist`.
+    """
+    _check_length(fast, "macd.fast")
+    _check_length(slow, "macd.slow")
+    _check_length(signal, "macd.signal")
+    if fast >= slow:
+        raise ValueError(f"macd.fast ({fast}) must be < macd.slow ({slow})")
+    macd_line = ema(series, fast) - ema(series, slow)
+    signal_line = ema(macd_line.dropna(), signal).reindex(series.index)
+    hist = macd_line - signal_line
+    return pd.DataFrame({"macd": macd_line, "signal": signal_line, "hist": hist})
