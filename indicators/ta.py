@@ -37,3 +37,16 @@ def ema(series: pd.Series, length: int) -> pd.Series:
         prev = alpha * values[i] + (1.0 - alpha) * prev
         out_arr[i] = prev
     return pd.Series(out_arr, index=series.index, name=series.name)
+
+
+def rsi(series: pd.Series, length: int = 14) -> pd.Series:
+    """Wilder's RSI. Matches pandas-ta's `rsi(..., length=length)`."""
+    _check_length(length, "rsi")
+    delta = series.diff()
+    gain = delta.clip(lower=0)
+    loss = -delta.clip(upper=0)
+    # Wilder's smoothing = EMA with alpha=1/length
+    avg_gain = gain.ewm(alpha=1 / length, adjust=False, min_periods=length).mean()
+    avg_loss = loss.ewm(alpha=1 / length, adjust=False, min_periods=length).mean()
+    rs = avg_gain / avg_loss
+    return 100 - (100 / (1 + rs))
