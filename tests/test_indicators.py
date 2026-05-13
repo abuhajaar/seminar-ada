@@ -94,3 +94,16 @@ def test_supertrend_matches_pandas_ta(synth_ohlcv: pd.DataFrame):
         ours["dir"].loc[idx].values.astype(int),
         ref["SUPERTd_10_3.0"].loc[idx].values.astype(int),
     )
+
+
+def test_supertrend_short_series_returns_all_nan():
+    # 3 bars but length=10 → ATR cannot be seeded; pandas-ta returns all-NaN.
+    idx = pd.date_range("2025-01-01", periods=3, freq="1h", tz="UTC")
+    high = pd.Series([101.0, 102.0, 103.0], index=idx)
+    low = pd.Series([99.0, 100.0, 101.0], index=idx)
+    close = pd.Series([100.0, 101.0, 102.0], index=idx)
+    out = supertrend(high, low, close, length=10, multiplier=3.0)
+    assert set(out.columns) == {"st", "dir"}
+    assert out["st"].isna().all()
+    assert out["dir"].isna().all()
+    assert len(out) == 3

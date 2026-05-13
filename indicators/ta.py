@@ -139,29 +139,33 @@ def supertrend(
     if multiplier <= 0:
         raise ValueError(f"supertrend multiplier must be positive, got {multiplier}")
 
+    n = len(close)
+    # Short-series guard: pandas-ta returns all-NaN when there isn't enough
+    # data to seed ATR. We mirror that contract.
+    if n < length:
+        return pd.DataFrame(
+            {"st": np.full(n, np.nan), "dir": np.full(n, np.nan)},
+            index=close.index,
+        )
+
     hl2 = (high + low) / 2.0
     tr = _true_range(high, low, close).astype(float)
     tr_seeded = tr.copy()
-    if len(tr_seeded) >= length:
-        seed = float(tr_seeded.iloc[:length].mean())
-        tr_seeded.iloc[: length - 1] = float("nan")
-        tr_seeded.iloc[length - 1] = seed
+    seed = float(tr_seeded.iloc[:length].mean())
+    tr_seeded.iloc[: length - 1] = float("nan")
+    tr_seeded.iloc[length - 1] = seed
     atr = tr_seeded.ewm(alpha=1.0 / length, adjust=False).mean()
 
     upper_basic = hl2 + multiplier * atr
     lower_basic = hl2 - multiplier * atr
 
-    n = len(close)
     upper = upper_basic.copy()
     lower = lower_basic.copy()
     direction = np.full(n, np.nan)
     st = np.full(n, np.nan)
 
-    # First valid index = first non-NaN ATR
-    first_valid = atr.first_valid_index()
-    if first_valid is None:
-        return pd.DataFrame({"st": st, "dir": direction}, index=close.index)
-    start = close.index.get_loc(first_valid)
+    # ATR is non-NaN starting at index `length-1` by construction above.
+    start = length - 1
 
     direction[start] = 1
     st[start] = lower.iloc[start]
