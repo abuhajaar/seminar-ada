@@ -183,3 +183,88 @@ async def test_cached_client_treats_corrupt_json_as_miss(tmp_path: Path):
     import json
     obj = json.loads(files[0].read_text(encoding="utf-8"))
     assert "content" in obj
+
+
+# --- peek() ----------------------------------------------------------------
+
+
+class _CountingMock:
+    """MockClient-like stub that records call count for peek tests."""
+
+    def __init__(self) -> None:
+        self.calls = 0
+
+    async def complete(self, **kwargs):
+        from llm.client import LLMResponse
+        self.calls += 1
+        return LLMResponse(
+            content="BUY 0.6 stub",
+            model=kwargs["model"],
+            input_tokens=10,
+            output_tokens=20,
+        )
+
+
+def test_peek_returns_none_on_miss(tmp_path: Path):
+    cached = CachedClient(inner=_CountingMock(), cache_dir=tmp_path)
+    result = cached.peek(
+        agent="technical", prompt="x", image_b64=None, model="m", bar_ts=1,
+    )
+    assert result is None
+
+
+async def test_peek_returns_cached_on_hit(tmp_path: Path):
+    stub = _CountingMock()
+    cached = CachedClient(inner=stub, cache_dir=tmp_path)
+    # Warm the cache.
+    warm = await cached.complete(
+        agent="technical", prompt="x", image_b64=None, model="m", bar_ts=1,
+    )
+    assert stub.calls == 1
+    # Peek must return the same payload without touching the inner.
+    peeked = cached.peek(
+        agent="technical", prompt="x", image_b64=None, model="m", bar_ts=1,
+    )
+    assert peeked is not None
+    assert peeked.content == warm.content
+    assert stub.calls == 1  # no extra inner call
+
+
+async def test_peek_normalizes_agent_case(tmp_path: Path):
+    """Cache key normalizes agent to lowercase; peek must agree."""
+    cached = CachedClient(inner=_CountingMock(), cache_dir=tmp_path)
+    # Warm with mixed case; CachedClient lowercases internally.
+    await cached.complete(
+        agent="Technical", prompt="x", image_b64=None, model="m", bar_ts=1,
+    )
+    # Peek with a different casing should still hit.
+    result = cached.peek(
+        agent="TECHNICAL", prompt="x", image_b64=None, model="m", bar_ts=1,
+    )
+    assert result is not None
+
+
+async def test_peek_returns_none_on_corrupt_file(tmp_path: Path):
+    """Corrupt cache files are treated as misses (and unlinked) by _try_read."""
+    cached = CachedClient(inner=_CountingMock(), cache_dir=tmp_path)
+    await cached.complete(
+        agent="technical", prompt="x", image_b64=None, model="m", bar_ts=1,
+    )
+    files = list(tmp_path.rglob("*.json"))
+    assert len(files) == 1
+    files[0].write_text("{ not valid json", encoding="utf-8")
+    result = cached.peek(
+        agent="technical", prompt="x", image_b64=None, model="m", bar_ts=1,
+    )
+    assert result is None
+    # _try_read unlinks corrupt files.
+    assert not files[0].exists()
+
+
+def test_peek_does_not_call_inner(tmp_path: Path):
+    """peek() must be a pure read; it should never invoke the inner client."""
+    stub = _CountingMock()
+    cached = CachedClient(inner=stub, cache_dir=tmp_path)
+    # Miss path
+    cached.peek(agent="technical", prompt="x", image_b64=None, model="m", bar_ts=1)
+    assert stub.calls == 0

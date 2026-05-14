@@ -84,6 +84,39 @@ class CachedClient:
             return None
         return LLMResponse(**obj)
 
+    def peek(
+        self,
+        *,
+        agent: str,
+        prompt: str,
+        image_b64: str | None,
+        model: str,
+        bar_ts: int,
+    ) -> LLMResponse | None:
+        """Return the cached response for this key, or None on miss.
+
+        Public read-only lookup mirroring the hit branch of ``complete()``.
+        Used by callers that want to short-circuit ahead of side effects
+        (e.g. ``BudgetGuardedClient`` skipping the budget gate on a hit).
+        Does no I/O beyond opening the file and does not advance any state.
+        """
+        agent_norm = agent.lower()
+        key = cache_key(
+            model=model,
+            agent=agent_norm,
+            prompt=prompt,
+            image_b64=image_b64,
+            bar_ts=bar_ts,
+        )
+        # _path_for has the side-effect of `mkdir(parents=True, exist_ok=True)`,
+        # which is acceptable for a peek: creating an empty directory tree
+        # doesn't materially change behavior and keeps this method consistent
+        # with the hit branch of `complete()`.
+        path = self._path_for(model=model, agent=agent_norm, key=key)
+        if not path.exists():
+            return None
+        return self._try_read(path)
+
     async def complete(
         self,
         *,
