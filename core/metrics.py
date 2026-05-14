@@ -38,6 +38,24 @@ class MetricsDict(TypedDict):
     sharpe: float
 
 
+def drawdown_series(equity: np.ndarray) -> np.ndarray:
+    """Drawdown series in percent (≤ 0): (equity - running_peak) / running_peak * 100.
+
+    Positive values (numerical noise at the running peak) are clamped to 0.
+    Zero or negative running peaks yield 0 to avoid divide-by-zero.
+    """
+    equity = np.asarray(equity, dtype=float)
+    running_peak = np.maximum.accumulate(equity)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        dd = np.where(
+            running_peak > 0,
+            (equity - running_peak) / running_peak,
+            0.0,
+        )
+    dd = np.where(dd > 0, 0.0, dd)
+    return dd * 100.0
+
+
 def compute_metrics(
     equity_curve: list[tuple[datetime, float]],
     trades: list[Trade],
@@ -49,10 +67,8 @@ def compute_metrics(
 
     total_return_pct = float((equity[-1] / equity[0] - 1.0) * 100.0)
 
-    running_peak = np.maximum.accumulate(equity)
-    drawdowns = (equity - running_peak) / running_peak
-    max_dd = float(drawdowns.min())
-    max_drawdown_pct = max_dd * 100.0 if max_dd < 0 else 0.0
+    dd_series = drawdown_series(equity)
+    max_drawdown_pct = min(float(dd_series.min()), 0.0)
 
     pnls = np.array([t.pnl for t in trades], dtype=float)
     num_trades = len(trades)
