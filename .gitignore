@@ -10,7 +10,9 @@ venv/
 
 # Data & cache
 data/cache/
-cache/llm/
+# NOTE: the LLM bar-keyed cache (cache/llm/) is intentionally TRACKED in git so
+# that seminar replays are free, deterministic, and offline-capable (spec §6).
+# Do NOT add cache/llm/ to ignores.
 results/runs/
 results/plots/
 
