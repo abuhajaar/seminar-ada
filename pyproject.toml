@@ -17,6 +17,7 @@ dependencies = [
     "langchain-core>=0.3",
     "mplfinance>=0.12",
     "pillow>=10",
+    "rich>=13",
 ]
 
 [project.optional-dependencies]
