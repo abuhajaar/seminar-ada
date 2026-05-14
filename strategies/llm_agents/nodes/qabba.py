@@ -8,7 +8,11 @@ from strategies.llm_agents.prompts import build_qabba_prompt
 from strategies.llm_agents.state import GraphState
 
 
-async def qabba_node(state: GraphState, *, client: LLMClient) -> GraphState:
+async def qabba_node(state: GraphState, *, client: LLMClient) -> dict:
+    """Return a partial state update containing only the ``qabba`` key.
+
+    See ``technical_node`` for why analyst nodes return deltas (not full state).
+    """
     prompt = build_qabba_prompt(state["features"])
     resp = await call_llm(
         client=client,
@@ -18,4 +22,4 @@ async def qabba_node(state: GraphState, *, client: LLMClient) -> GraphState:
         model=state["model"],
         bar_ts=state["bar_ts"],
     )
-    return {**state, "qabba": parse_response(resp.content)}
+    return {"qabba": parse_response(resp.content)}

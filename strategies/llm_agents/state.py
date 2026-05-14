@@ -2,8 +2,14 @@
 
 Keys are intentionally permissive (analyst slots default to ``None`` and are
 filled in by their respective nodes). LangGraph treats this as a state schema
-and merges node outputs by replacement; parallel nodes write disjoint keys so
-no custom reducers are required.
+and merges node outputs by replacement.
+
+**Concurrency contract:** parallel nodes (``technical`` / ``visual`` / ``qabba``)
+each return a *partial* state update containing ONLY the slot they own. LangGraph's
+default ``LastValue`` reducer raises ``InvalidUpdateError`` if multiple concurrent
+nodes write the same key in one step, so analyst nodes must NOT spread shared
+inputs (``bar_ts``, ``features``, ``model``, ``image_b64``) back into their
+return value.
 """
 from __future__ import annotations
 

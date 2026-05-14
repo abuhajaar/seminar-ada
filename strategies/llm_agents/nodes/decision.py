@@ -38,7 +38,12 @@ def _score(
     return s
 
 
-async def decision_node(state: GraphState) -> GraphState:
+async def decision_node(state: GraphState) -> dict:
+    """Return a partial state update containing only the ``decision`` key.
+
+    Decision runs sequentially after fan-in so the parallel-write constraint
+    does not apply, but we return a delta for consistency with analyst nodes.
+    """
     reports: dict[str, AgentReport | None] = {
         "technical": state["technical"],
         "visual": state["visual"],
@@ -52,6 +57,9 @@ async def decision_node(state: GraphState) -> GraphState:
     elif sell > THRESHOLD and sell > buy:
         action, conf = Action.SELL, sell
     else:
+        # HOLD branch. Floor confidence at 0.5 so neutral/no-vote HOLDs read as
+        # "moderately confident in inaction"; below-threshold HOLDs surface the
+        # winning side's score (e.g. 0.435) so reviewers can see the near-miss.
         action, conf = Action.HOLD, max(buy, sell, 0.5)
 
     rationale = (
@@ -59,6 +67,5 @@ async def decision_node(state: GraphState) -> GraphState:
         f"weights(Q={W_QABBA},V={W_VISUAL},T={W_TECH}) thr={THRESHOLD}"
     )
     return {
-        **state,
         "decision": AgentReport(action=action, confidence=conf, rationale=rationale),
     }

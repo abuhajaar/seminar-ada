@@ -107,15 +107,18 @@ async def test_visual_node_hold_with_mock():
     assert out["visual"].action is Action.HOLD
 
 
-async def test_nodes_preserve_other_state_keys():
-    """Each node must not clobber peer slots written in parallel."""
+async def test_nodes_return_delta_only_not_full_state():
+    """Each parallel analyst node must return ONLY its own slot.
+
+    Returning shared keys (``bar_ts``, ``model``, ``features``) from concurrent
+    nodes triggers LangGraph's ``InvalidUpdateError`` on the default ``LastValue``
+    reducer. The contract for parallel nodes is: write only what you own.
+    """
     client = MockClient()
     s = _state({"ema_fast": 110, "ema_slow": 100, "macd_hist": 0.5})
     out = await technical_node(s, client=client)
-    # bar_ts/model/features preserved
-    assert out["bar_ts"] == s["bar_ts"]
-    assert out["model"] == s["model"]
-    assert out["features"] == s["features"]
+    assert set(out.keys()) == {"technical"}
+    assert out["technical"] is not None
 
 
 async def test_cached_client_receives_bar_ts(tmp_path):

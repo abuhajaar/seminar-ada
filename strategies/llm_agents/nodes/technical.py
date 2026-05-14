@@ -8,7 +8,14 @@ from strategies.llm_agents.prompts import build_technical_prompt
 from strategies.llm_agents.state import GraphState
 
 
-async def technical_node(state: GraphState, *, client: LLMClient) -> GraphState:
+async def technical_node(state: GraphState, *, client: LLMClient) -> dict:
+    """Return a partial state update containing only the ``technical`` key.
+
+    LangGraph merges concurrent node outputs by channel; returning shared keys
+    (``bar_ts``, ``model``, ``features``) from multiple parallel nodes raises
+    ``InvalidUpdateError`` on its default ``LastValue`` reducer. Each analyst
+    node therefore writes ONLY the slot it owns.
+    """
     prompt = build_technical_prompt(state["features"])
     resp = await call_llm(
         client=client,
@@ -18,4 +25,4 @@ async def technical_node(state: GraphState, *, client: LLMClient) -> GraphState:
         model=state["model"],
         bar_ts=state["bar_ts"],
     )
-    return {**state, "technical": parse_response(resp.content)}
+    return {"technical": parse_response(resp.content)}
