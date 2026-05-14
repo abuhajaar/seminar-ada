@@ -26,7 +26,17 @@ _EPS_USD = 1e-9
 
 
 class BudgetExceededError(RuntimeError):
-    """Raised when a pending LLM call would push cumulative spend over the cap."""
+    """Raised when a pending LLM call would push cumulative spend over the cap.
+
+    Args:
+        message: Human-readable description.
+        spend_usd: Cumulative USD already charged at the moment of refusal.
+            Defaults to 0.0 for backward-compatible construction.
+    """
+
+    def __init__(self, message: str, *, spend_usd: float = 0.0) -> None:
+        super().__init__(message)
+        self.spend_usd = spend_usd
 
 
 def estimate_cost_usd(
@@ -81,7 +91,8 @@ class BudgetGuard:
         if self._spent + est_usd > self._cap + _EPS_USD:
             raise BudgetExceededError(
                 f"Budget exceeded: spent={self._spent:.4f} + est={est_usd:.4f} "
-                f"> cap={self._cap:.4f}"
+                f"> cap={self._cap:.4f}",
+                spend_usd=self._spent,
             )
 
     def charge(self, usd: float) -> None:

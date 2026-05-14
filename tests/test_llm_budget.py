@@ -96,3 +96,18 @@ def test_budget_guard_floating_point_boundary():
     g.charge(0.2)
     # remaining could be slightly negative due to FP; check_can_afford(0.0) must not raise
     g.check_can_afford(0.0)
+
+
+def test_budget_exceeded_error_carries_spend_usd():
+    """check_can_afford must raise with spend_usd populated to current _spent."""
+    g = BudgetGuard(cap_usd=1.0)
+    g.charge(0.80)
+    with pytest.raises(BudgetExceededError) as exc_info:
+        g.check_can_afford(0.50)  # 0.80 + 0.50 > 1.0
+    assert exc_info.value.spend_usd == pytest.approx(0.80)
+
+
+def test_budget_exceeded_error_default_spend_usd_zero():
+    """Constructing the error without a spend_usd kwarg defaults to 0.0."""
+    err = BudgetExceededError("test")
+    assert err.spend_usd == 0.0
