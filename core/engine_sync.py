@@ -26,7 +26,12 @@ from core.types import Action, Bar, Order
 from strategies.base import Context, Strategy
 
 
-def _size(equity: float, risk_pct: float, entry: float, stop: float) -> float:
+def size_position(equity: float, risk_pct: float, entry: float, stop: float) -> float:
+    """Fixed-fractional position size: risk_dollars / per-unit risk.
+
+    Shared by both `engine_sync.run_sync` and `engine.run_async` so the two
+    engines compute identical quantities for identical inputs.
+    """
     risk_dollars = equity * risk_pct
     risk_per_unit = abs(entry - stop)
     if risk_per_unit == 0.0:
@@ -83,7 +88,7 @@ async def run_sync(
             else:
                 # Opening trade: size from risk + stop.
                 if signal.stop_loss is not None:
-                    qty = _size(
+                    qty = size_position(
                         equity=ctx.equity, risk_pct=risk_pct,
                         entry=bar.close, stop=signal.stop_loss,
                     )
