@@ -1,7 +1,8 @@
-"""Rich layout components for the dual-bot TUI (no Live yet — Task 7)."""
+"""Rich layout components for the dual-bot TUI (Task 6 + Task 7 live ticker)."""
 
 from __future__ import annotations
 
+import asyncio
 from collections import deque
 
 from rich.console import Console
@@ -127,3 +128,34 @@ def test_header_handles_none_bar_ts() -> None:
     out = console.export_text()
     assert "ETH/USDT" in out
     assert "4h" in out
+
+
+async def test_live_ticker_redraws() -> None:
+    """start_live should redraw the layout as RunState mutates."""
+    rs = RunState(symbol="BTC/USDT", timeframe="1h", total_bars=20)
+    rs.bar_close = 50000.0
+    console = Console(record=True, width=120, force_terminal=True)
+    await ui.start_live(rs, console=console, interval=0.02)
+    try:
+        for i in range(1, 6):
+            rs.current_bar = i * 4  # 4, 8, 12, 16, 20
+            await asyncio.sleep(0.05)  # let the ticker tick at least once
+    finally:
+        await ui.stop_live()
+    out = console.export_text()
+    # Require ≥2 distinct bar numbers to prove the ticker re-read RunState
+    # across mutations, not just that a single early frame rendered.
+    hits = [n for n in (4, 8, 12, 16, 20) if f"{n}/20" in out]
+    assert len(hits) >= 2, (
+        f"Expected ≥2 distinct bar numbers, got {hits}. Output: {out[:500]}"
+    )
+
+
+async def test_stop_live_idempotent() -> None:
+    """stop_live must be a no-op when nothing is running."""
+    await ui.stop_live()  # before any start
+    rs = RunState(symbol="X", timeframe="1h", total_bars=2)
+    await ui.start_live(rs, console=Console(record=True), interval=0.01)
+    await asyncio.sleep(0.02)
+    await ui.stop_live()
+    await ui.stop_live()  # second call should be a no-op

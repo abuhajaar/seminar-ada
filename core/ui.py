@@ -17,8 +17,12 @@ Key public surface:
 
 from __future__ import annotations
 
-from rich.console import RenderableType
+import asyncio
+import contextlib
+
+from rich.console import Console, RenderableType
 from rich.layout import Layout
+from rich.live import Live
 from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
@@ -186,3 +190,99 @@ def build_layout(run_state: RunState) -> Layout:
     layout["footer"].update(panels["footer"])
 
     return layout
+
+
+# ---------------------------------------------------------------------------
+# Task 7: 4 Hz async live ticker.
+#
+# The ticker runs as a single background asyncio task that wraps `Live` in
+# `auto_refresh=False` mode and drives `live.update(...)` explicitly at the
+# requested interval. We pass the live `RunState` directly to `build_layout`
+# rather than calling `run_state.snapshot()` — the snapshot helper exists to
+# guard against cross-thread tearing, but the ticker shares the same event
+# loop as the engine and only reads attributes between `await` points, so a
+# fresh dict copy on every frame would just be wasted allocations.
+# ---------------------------------------------------------------------------
+
+_stop_event: asyncio.Event | None = None
+_live_task: asyncio.Task | None = None
+
+
+async def start_live(
+    run_state: RunState,
+    console: Console | None = None,
+    interval: float = 0.25,
+) -> asyncio.Task:
+    """Start a background task that re-renders the layout every ``interval`` s.
+
+    The default interval of 0.25 s corresponds to the spec's "4 Hz async live
+    ticker". The returned task can be awaited or cancelled by callers, but the
+    canonical shutdown path is :func:`stop_live`.
+
+    Note: on non-TTY consoles (where ``console.is_terminal`` is ``False`` and
+    ``force_terminal`` was not passed), Rich's ``Live`` may render nothing —
+    pass ``force_terminal=True`` when constructing the ``Console`` if output
+    capture is required (e.g. in tests).
+    """
+    global _stop_event, _live_task
+
+    if _live_task is not None and not _live_task.done():
+        raise RuntimeError(
+            "Live ticker already running; call stop_live() first",
+        )
+
+    # Fresh event per start so that multiple sequential runs in one process
+    # (e.g. test suites) do not inherit a previously-set flag.
+    _stop_event = asyncio.Event()
+    stop_event = _stop_event
+
+    async def _ticker() -> None:
+        with Live(
+            build_layout(run_state),
+            console=console,
+            refresh_per_second=4,
+            auto_refresh=False,
+            screen=False,
+        ) as live:
+            while not stop_event.is_set():
+                live.update(build_layout(run_state), refresh=True)
+                # Sleep up to `interval`, waking early if stop is signalled.
+                with contextlib.suppress(TimeoutError):
+                    await asyncio.wait_for(stop_event.wait(), timeout=interval)
+
+    _live_task = asyncio.create_task(_ticker())
+    return _live_task
+
+
+async def stop_live() -> None:
+    """Signal the ticker to stop and await its shutdown.
+
+    Idempotent: safe to call when no ticker is running, or repeatedly.
+    Falls back to cancellation if the task does not exit within a short
+    grace period.
+    """
+    global _stop_event, _live_task
+
+    if _stop_event is None or _live_task is None:
+        return
+
+    task = _live_task
+    event = _stop_event
+
+    event.set()
+    try:
+        try:
+            # Give the loop one full tick plus headroom to drain cleanly.
+            await asyncio.wait_for(task, timeout=2.0)
+        except TimeoutError:
+            task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await task
+        except asyncio.CancelledError:
+            # Task was cancelled externally — treat as a clean stop.
+            pass
+    finally:
+        # Always reset module state so subsequent calls are true no-ops,
+        # even if the ticker task raised an unhandled exception above.
+        _stop_event = None
+        _live_task = None
