@@ -1,4 +1,5 @@
-from datetime import datetime, timezone
+from dataclasses import FrozenInstanceError
+from datetime import UTC, datetime
 
 import pytest
 
@@ -7,7 +8,7 @@ from core.types import Action, AgentReport, Bar, Signal, Trade
 
 def _bar(**overrides):
     base = dict(
-        timestamp=datetime(2025, 4, 1, 0, 0, tzinfo=timezone.utc),
+        timestamp=datetime(2025, 4, 1, 0, 0, tzinfo=UTC),
         open=100.0, high=101.0, low=99.5, close=100.5,
         volume=1000.0, taker_buy_volume=550.0,
         cvd=120.0, cvd_delta=20.0,
@@ -18,14 +19,14 @@ def _bar(**overrides):
 
 def test_bar_is_immutable():
     bar = _bar()
-    with pytest.raises(Exception):  # FrozenInstanceError
+    with pytest.raises(FrozenInstanceError):
         bar.close = 200.0  # type: ignore[misc]
 
 
 def test_bar_round_trip_fields():
     bar = _bar(close=101.25)
     assert bar.close == 101.25
-    assert bar.timestamp.tzinfo is timezone.utc
+    assert bar.timestamp.tzinfo is UTC
 
 
 def test_action_enum_values():
@@ -52,8 +53,8 @@ def test_agent_report_construct():
 
 def test_trade_pnl_property():
     t = Trade(
-        entry_ts=datetime(2025, 4, 1, tzinfo=timezone.utc),
-        exit_ts=datetime(2025, 4, 1, 1, tzinfo=timezone.utc),
+        entry_ts=datetime(2025, 4, 1, tzinfo=UTC),
+        exit_ts=datetime(2025, 4, 1, 1, tzinfo=UTC),
         entry_price=100.0, exit_price=110.0, qty=2.0,
         side=Action.BUY, fees=0.5,
     )

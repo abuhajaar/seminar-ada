@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 import pandas as pd
@@ -57,7 +57,7 @@ def test_load_bars_yields_bars(tmp_path: Path):
     )
     assert len(bars) == 4
     assert all(isinstance(b, Bar) for b in bars)
-    assert bars[0].timestamp == datetime(2025, 4, 1, 0, 0, tzinfo=timezone.utc)
+    assert bars[0].timestamp == datetime(2025, 4, 1, 0, 0, tzinfo=UTC)
     assert bars[2].close == 103.0
     assert bars[2].cvd == 2.0
     assert bars[2].cvd_delta == 3.0

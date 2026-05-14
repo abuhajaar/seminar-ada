@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 
@@ -11,7 +11,7 @@ from core.types import Action
 
 
 def _ts(hour: int) -> datetime:
-    return datetime(2025, 4, 1, hour, 0, tzinfo=timezone.utc)
+    return datetime(2025, 4, 1, hour, 0, tzinfo=UTC)
 
 
 def test_portfolio_starts_flat():

@@ -70,7 +70,8 @@ class Broker:
             return
 
         if order.stop_loss is None:
-            return  # close-only order; position already gone (e.g., stop hit between queue and fill)
+            # close-only order; position already gone (e.g., stop hit between queue and fill)
+            return
 
         self.portfolio.open_position(
             action=order.action, price=fill_price, quantity=order.quantity,
