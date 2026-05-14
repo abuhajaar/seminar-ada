@@ -20,12 +20,41 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Iterable
 
+import numpy as np
+
 from core.broker import Broker
 from core.engine_sync import size_position
-from core.metrics import MetricsDict, compute_metrics
+from core.metrics import MetricsDict, compute_metrics, drawdown_series
 from core.portfolio import Portfolio
-from core.types import Action, Bar, Order, Signal
+from core.run_state import RunState
+from core.types import Action, Bar, Order, Signal, Trade
 from strategies.base import Context, Strategy
+
+# Budget/cache counters (cache_hits, cache_misses, spend_usd, budget_usd) on
+# RunState are intentionally left at their defaults by this engine. Neither
+# CachedClient nor LLMAgentStrategy currently exposes hit/miss counters, and
+# the budget guard reference lives in the run wiring layer. main.py (Task 8)
+# surfaces those values from BudgetGuard.spent_usd directly.
+
+
+def _win_pct(trades: list[Trade]) -> float:
+    """Match core.metrics.compute_metrics: wins / (wins + losses) * 100."""
+    wins = sum(1 for t in trades if t.pnl > 0)
+    losses = sum(1 for t in trades if t.pnl < 0)
+    decided = wins + losses
+    if decided == 0:
+        return 0.0
+    return wins / decided * 100.0
+
+
+def _rolling_mdd_pct(curve: list[float]) -> float:
+    """Most-negative drawdown over the (bounded) equity curve, in percent."""
+    if not curve:
+        return 0.0
+    dd = drawdown_series(np.asarray(curve, dtype=float))
+    if dd.size == 0:
+        return 0.0
+    return min(float(dd.min()), 0.0)
 
 
 def _queue_from_signal(
@@ -76,6 +105,7 @@ async def run_async(
     taker_fee_bps: float,
     slippage_bps: float,
     risk_pct: float,
+    run_state: RunState | None = None,
 ) -> tuple[Portfolio, Portfolio, MetricsDict, MetricsDict]:
     portfolio_trad = Portfolio(initial_balance=initial_balance)
     portfolio_llm = Portfolio(initial_balance=initial_balance)
@@ -135,6 +165,33 @@ async def run_async(
         # 6. Mark equity per leg.
         portfolio_trad.mark(bar.timestamp, bar.close)
         portfolio_llm.mark(bar.timestamp, bar.close)
+
+        # 7. Mirror live state into RunState (UI consumes this).
+        if run_state is not None:
+            trad_eq = portfolio_trad.equity(bar.close)
+            llm_eq = portfolio_llm.equity(bar.close)
+            run_state.current_bar = bar_count
+            run_state.bar_ts = bar.timestamp
+            run_state.bar_close = bar.close
+            run_state.trad_equity = trad_eq
+            run_state.llm_equity = llm_eq
+            run_state.trad_curve.append(trad_eq)
+            run_state.llm_curve.append(llm_eq)
+            # Cap curves at 500 most-recent points (bounded memory).
+            if len(run_state.trad_curve) > 500:
+                del run_state.trad_curve[: len(run_state.trad_curve) - 500]
+            if len(run_state.llm_curve) > 500:
+                del run_state.llm_curve[: len(run_state.llm_curve) - 500]
+            run_state.trad_trades = len(portfolio_trad.closed_trades)
+            run_state.llm_trades = len(portfolio_llm.closed_trades)
+            run_state.last_trad_signal = sig_trad.action.value
+            run_state.last_trad_rationale = sig_trad.reasoning or ""
+            if sig_llm.reasoning:
+                run_state.llm_reasoning.append(sig_llm.reasoning)
+            run_state.trad_win_pct = _win_pct(portfolio_trad.closed_trades)
+            run_state.llm_win_pct = _win_pct(portfolio_llm.closed_trades)
+            run_state.trad_mdd = _rolling_mdd_pct(run_state.trad_curve)
+            run_state.llm_mdd = _rolling_mdd_pct(run_state.llm_curve)
 
     if bar_count < 2:
         raise ValueError("need at least 2 bars to compute metrics")

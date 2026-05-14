@@ -47,7 +47,7 @@ class RunState:
     llm_trades: int = 0
     trad_win_pct: float = 0.0
     llm_win_pct: float = 0.0
-    trad_mdd: float = 0.0  # negative number, e.g. -0.042 for -4.2%
+    trad_mdd: float = 0.0  # percent, non-positive (e.g. -4.2 for -4.2%)
     llm_mdd: float = 0.0
 
     # Most-recent traditional-bot output.

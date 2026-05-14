@@ -15,6 +15,7 @@ import pytest
 
 from core.engine import run_async
 from core.engine_sync import run_sync
+from core.run_state import RunState
 from core.types import Bar
 from strategies.traditional import TraditionalStrategy
 
@@ -117,6 +118,78 @@ async def test_engine_parity_with_engine_sync():
         else:
             assert v_trad == v_ref
             assert v_llm == v_ref
+
+
+async def test_engine_updates_run_state():
+    """Engine writes per-bar snapshots into RunState when supplied."""
+    bars = _make_bars(400, seed=42)
+    run_state = RunState(symbol="TEST", timeframe="1h", total_bars=400)
+
+    portfolio_trad, portfolio_llm, _m_trad, _m_llm = await run_async(
+        bars=bars,
+        trad_strategy=TraditionalStrategy(),
+        llm_strategy=TraditionalStrategy(),
+        symbol=SYMBOL, initial_balance=INITIAL_BALANCE,
+        taker_fee_bps=TAKER_FEE_BPS, slippage_bps=SLIPPAGE_BPS,
+        risk_pct=RISK_PCT,
+        run_state=run_state,
+    )
+
+    last_bar = bars[-1]
+    assert run_state.current_bar == 400
+    assert len(run_state.trad_curve) == 400
+    assert len(run_state.llm_curve) == 400
+    assert run_state.bar_ts == last_bar.timestamp
+    assert run_state.bar_close == last_bar.close
+    assert run_state.trad_equity == pytest.approx(
+        portfolio_trad.equity(last_bar.close), abs=1e-8
+    )
+    assert run_state.llm_equity == pytest.approx(
+        portfolio_llm.equity(last_bar.close), abs=1e-8
+    )
+    assert run_state.trad_trades == len(portfolio_trad.closed_trades)
+    assert run_state.llm_trades == len(portfolio_llm.closed_trades)
+    assert run_state.trad_trades >= 1
+    assert run_state.llm_trades >= 1
+    assert run_state.last_trad_signal in {"BUY", "SELL", "HOLD"}
+    assert isinstance(run_state.last_trad_rationale, str)
+    assert len(run_state.last_trad_rationale) > 0
+    assert 0.0 <= run_state.trad_win_pct <= 100.0
+    assert 0.0 <= run_state.llm_win_pct <= 100.0
+    assert run_state.trad_mdd <= 0.0
+    assert run_state.llm_mdd <= 0.0
+
+
+async def test_engine_run_state_is_optional():
+    """Omitting run_state keeps the 4-tuple return and parity behavior."""
+    bars = _make_bars(400, seed=42)
+    result = await run_async(
+        bars=bars,
+        trad_strategy=TraditionalStrategy(),
+        llm_strategy=TraditionalStrategy(),
+        symbol=SYMBOL, initial_balance=INITIAL_BALANCE,
+        taker_fee_bps=TAKER_FEE_BPS, slippage_bps=SLIPPAGE_BPS,
+        risk_pct=RISK_PCT,
+    )
+    assert len(result) == 4
+
+
+async def test_engine_curve_caps_at_500():
+    """Equity curves in RunState are capped at 500 most-recent points."""
+    bars = _make_bars(600, seed=42)
+    run_state = RunState(symbol="TEST", timeframe="1h", total_bars=600)
+    await run_async(
+        bars=bars,
+        trad_strategy=TraditionalStrategy(),
+        llm_strategy=TraditionalStrategy(),
+        symbol=SYMBOL, initial_balance=INITIAL_BALANCE,
+        taker_fee_bps=TAKER_FEE_BPS, slippage_bps=SLIPPAGE_BPS,
+        risk_pct=RISK_PCT,
+        run_state=run_state,
+    )
+    assert len(run_state.trad_curve) == 500
+    assert len(run_state.llm_curve) == 500
+    assert run_state.current_bar == 600
 
 
 def test_engine_requires_two_bars():
