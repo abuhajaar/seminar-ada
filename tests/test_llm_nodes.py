@@ -145,7 +145,13 @@ class _RecordingStub:
 
 async def test_call_llm_forwards_bar_ts_through_budget_guarded_client(tmp_path):
     """call_llm must pass bar_ts when the outer client wraps a CachedClient,
-    even via a BudgetGuardedClient intermediate."""
+    even via a BudgetGuardedClient intermediate.
+
+    Asserts via cache-key differentiation: two calls with different bar_ts
+    must produce two distinct cache files. If call_llm fails to forward
+    bar_ts through BudgetGuardedClient, both calls collide on the same key
+    (bar_ts=None) and only one file appears.
+    """
     from llm.budget import BudgetGuard
     from llm.budget_client import BudgetGuardedClient, ModelPricing
     from llm.cache import CachedClient
@@ -159,8 +165,17 @@ async def test_call_llm_forwards_bar_ts_through_budget_guarded_client(tmp_path):
     )
     await call_llm(
         client=guarded, agent="technical", prompt="hi",
-        image_b64=None, model="m", bar_ts=999,
+        image_b64=None, model="m", bar_ts=111,
     )
-    # cached called stub once; stub itself does not receive bar_ts (CachedClient consumes it).
+    await call_llm(
+        client=guarded, agent="technical", prompt="hi",
+        image_b64=None, model="m", bar_ts=222,
+    )
+    # Two distinct bar_ts values must yield two distinct cache files.
+    # If bar_ts were dropped on the way to CachedClient, both calls would
+    # collide on the same key and only one file would exist.
+    files = list(tmp_path.rglob("*.json"))
+    assert len(files) == 2
+    # And stub (inner of CachedClient) must have been hit twice — once per miss.
     assert stub.kwargs is not None
     assert stub.kwargs["model"] == "m"
