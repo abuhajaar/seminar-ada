@@ -38,6 +38,8 @@ from core.config import load_config
 from core.run_state import RunState
 from data.loader import load_bars
 from data.paths import DEFAULT_ROOT
+from llm.budget import BudgetGuard
+from llm.budget_client import BudgetGuardedClient, ModelPricing
 from llm.cache import CachedClient
 from llm.client import MockClient, OpenRouterClient
 from strategies.base import Strategy
@@ -177,11 +179,9 @@ def run(
     console = Console()
 
     # ── Build LLM client stack ────────────────────────────────────────────
-    # NOTE: BudgetGuard in this codebase tracks spend separately rather than
-    # wrapping a client (see llm/budget.py). The strategies themselves are
-    # responsible for calling guard.check_can_afford / guard.charge; main.py
-    # just owns the cache + base client. Tech-debt: a future refactor could
-    # wrap the guard in a decorator client like `CachedClient` does.
+    # Layering: BudgetGuardedClient -> CachedClient -> inner.
+    # Cache hits short-circuit inside CachedClient and never reach the guard
+    # — pre-warmed seminar replays stay free even when the cap is exhausted.
     if mock:
         inner = MockClient()
     else:
@@ -194,7 +194,24 @@ def run(
             raise typer.Exit(code=2)
         inner = OpenRouterClient(api_key=api_key)
 
-    client = CachedClient(inner, cache_dir=Path(cfg.llm.cache_dir))
+    cached = CachedClient(inner, cache_dir=Path(cfg.llm.cache_dir))
+
+    guard: BudgetGuard | None = None
+    if mock:
+        client = cached
+    else:
+        guard = BudgetGuard(cap_usd=cfg.llm.max_usd)
+        pricing = {
+            m: ModelPricing(**p.model_dump())
+            for m, p in cfg.llm.pricing.items()
+        }
+        client = BudgetGuardedClient(
+            inner=cached,
+            guard=guard,
+            pricing=pricing,
+            expected_output_tokens=cfg.llm.expected_output_tokens,
+        )
+
     llm_model = _pick_llm_model(cfg)
 
     # ── Closures captured by walkforward.run ──────────────────────────────
@@ -228,13 +245,21 @@ def run(
         rs_holder["rs"] = rs
         return rs
 
-    rsf = None if no_tui else run_state_factory
+    # Always install the factory: in both --tui and --no-tui modes we want
+    # rs_holder["rs"] to advance per asset so _on_progress writes to the
+    # *current* RunState rather than the initial placeholder.
+    rsf = run_state_factory
+
+    def _on_progress(_symbol: str, _idx: int, _total: int) -> None:
+        if guard is not None:
+            rs_holder["rs"].spend_usd = guard.spent_usd
 
     async def _main() -> dict[str, dict[str, Any]]:
         if no_tui:
             return await walkforward.run(
                 wf_cfg.run.assets, bars_loader, build_strategies, wf_cfg,
                 run_state_factory=rsf,
+                on_progress=_on_progress,
             )
         # Live ticker reads through the proxy; engine writes to whichever
         # RunState run_state_factory just minted.
@@ -244,6 +269,7 @@ def run(
             return await walkforward.run(
                 wf_cfg.run.assets, bars_loader, build_strategies, wf_cfg,
                 run_state_factory=rsf,
+                on_progress=_on_progress,
             )
         finally:
             await ui.stop_live()
