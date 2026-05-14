@@ -131,3 +131,36 @@ async def test_cached_client_receives_bar_ts(tmp_path):
     assert out["technical"] is not None
     files = list(tmp_path.rglob("*.json"))
     assert len(files) == 1  # confirms bar_ts was forwarded (otherwise CachedClient would TypeError)
+
+
+class _RecordingStub:
+    def __init__(self):
+        self.kwargs = None
+
+    async def complete(self, **kwargs):
+        self.kwargs = kwargs
+        from llm.client import LLMResponse
+        return LLMResponse(content="x", model=kwargs["model"], input_tokens=1, output_tokens=1)
+
+
+async def test_call_llm_forwards_bar_ts_through_budget_guarded_client(tmp_path):
+    """call_llm must pass bar_ts when the outer client wraps a CachedClient,
+    even via a BudgetGuardedClient intermediate."""
+    from llm.budget import BudgetGuard
+    from llm.budget_client import BudgetGuardedClient, ModelPricing
+    from llm.cache import CachedClient
+    from strategies.llm_agents.nodes._common import call_llm
+
+    stub = _RecordingStub()
+    cached = CachedClient(stub, cache_dir=tmp_path)
+    pricing = {"m": ModelPricing(in_per_1m=1.0, out_per_1m=1.0)}
+    guarded = BudgetGuardedClient(
+        inner=cached, guard=BudgetGuard(cap_usd=10.0), pricing=pricing,
+    )
+    await call_llm(
+        client=guarded, agent="technical", prompt="hi",
+        image_b64=None, model="m", bar_ts=999,
+    )
+    # cached called stub once; stub itself does not receive bar_ts (CachedClient consumes it).
+    assert stub.kwargs is not None
+    assert stub.kwargs["model"] == "m"
