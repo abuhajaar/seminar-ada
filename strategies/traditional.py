@@ -26,6 +26,13 @@ from core.types import Action, Bar, Signal
 from indicators.ta import adx, ema, macd, rsi, supertrend
 from strategies.base import Context
 
+# MACD-hist epsilon: on a perfectly linear price ramp the MACD line becomes
+# constant so `signal` converges to it and `hist` collapses to floating-point
+# noise (~1e-14). A small absolute tolerance keeps the rule meaningful on
+# synthetic data without affecting realistic series where |hist| is many
+# orders of magnitude larger.
+MACD_HIST_EPS: float = 1e-9
+
 # Minimum bars before any indicator is reliable. SuperTrend(10,3) plus warmup
 # slack gives a comfortable margin (EMA50 needs 50, MACD slow 26, etc.).
 WARMUP = 60
@@ -84,12 +91,9 @@ class TraditionalStrategy:
                 stop_loss=None,
             )
 
-        # MACD-hist epsilon: on a perfectly linear price ramp the MACD line
-        # becomes constant so `signal` converges to it and `hist` collapses
-        # to floating-point noise (~1e-14). A small absolute tolerance keeps
-        # the rule meaningful on synthetic data without affecting realistic
-        # series where |hist| is many orders of magnitude larger.
-        macd_eps = 1e-9
+        # MACD-hist epsilon: see ``MACD_HIST_EPS`` module-level constant for
+        # the rationale (synthetic linear ramps collapse hist to ~1e-14).
+        macd_eps = MACD_HIST_EPS
         # RSI guard: the spec rule is "<70 / >30" to avoid chasing extremes.
         # Perfectly monotonic synthetic series pin RSI to exactly 100 (or 0)
         # from bar `length` onward, which would block every entry under a
