@@ -31,6 +31,11 @@ llm:
     decision:  { model: anthropic/claude-3.5-sonnet, temperature: 0 }
   consensus_weights: { qabba: 0.40, visual: 0.35, technical: 0.25 }
   consensus_threshold: 0.50
+  expected_output_tokens: 300
+  pricing:
+    anthropic/claude-3.5-sonnet:
+      in_per_1m: 3.00
+      out_per_1m: 15.00
 
 data:
   source: binance

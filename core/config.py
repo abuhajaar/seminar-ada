@@ -60,6 +60,11 @@ class AgentCfg(BaseModel):
         return v
 
 
+class PricingCfg(BaseModel):
+    in_per_1m: float = Field(ge=0)
+    out_per_1m: float = Field(ge=0)
+
+
 class LlmCfg(BaseModel):
     cache_dir: str
     max_usd: float
@@ -68,6 +73,8 @@ class LlmCfg(BaseModel):
     agents: dict[str, AgentCfg]
     consensus_weights: dict[str, float]
     consensus_threshold: float
+    pricing: dict[str, PricingCfg]
+    expected_output_tokens: int = Field(default=300, gt=0)
 
     @model_validator(mode="after")
     def _weights_sum_to_one(self):
@@ -75,6 +82,20 @@ class LlmCfg(BaseModel):
         if abs(total - 1.0) > 1e-6:
             raise ValueError(
                 f"consensus_weights must sum to 1.0, got {total}"
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _every_agent_model_priced(self):
+        missing = [
+            f"{name} -> {agent.model}"
+            for name, agent in self.agents.items()
+            if agent.model not in self.pricing
+        ]
+        if missing:
+            raise ValueError(
+                "Every agent's model must have a pricing entry. Missing: "
+                + ", ".join(missing)
             )
         return self
 
