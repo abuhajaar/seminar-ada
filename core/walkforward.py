@@ -107,8 +107,10 @@ async def run(
         except BudgetExceededError as e:
             # engine.run_async raised before returning portfolios, so both
             # legs are lost for this asset. trad_metrics stays {"status":
-            # "not_run"} from above; we only fill in the llm side.
-            # TODO(post-Task-5): plumb actual spent_usd onto BudgetExceededError
+            # "not_run"} from above; we only fill in the llm side. The
+            # spend_usd attr is populated by BudgetGuard.check_can_afford
+            # (see sub-plan E task 1); the getattr fallback is defensive
+            # against future callers raising the error directly.
             spend = getattr(e, "spend_usd", None) or 0.0
             llm_metrics = {
                 "status": "budget_exceeded",
