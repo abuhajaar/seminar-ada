@@ -23,21 +23,20 @@ def ema(series: pd.Series, length: int) -> pd.Series:
     SMA of the first `length` observations (not the very first value), so
     the first `length-1` outputs are NaN and the value at index `length-1`
     equals the SMA of the first `length` points.
+
+    Vectorized via pandas ``ewm(adjust=False)`` on a SMA-seeded copy of the
+    input: positions ``[0, length-2]`` are set to NaN so they are ignored
+    by the recursion, and position ``length-1`` is set to the SMA seed.
     """
     _check_length(length, "ema")
     alpha = 2.0 / (length + 1.0)
-    values = series.to_numpy(dtype=float, copy=True)
-    out = pd.Series(float("nan"), index=series.index, dtype=float, name=series.name)
-    if len(values) < length:
-        return out
-    seed = values[:length].mean()
-    out_arr = out.to_numpy(copy=True)
-    out_arr[length - 1] = seed
-    prev = seed
-    for i in range(length, len(values)):
-        prev = alpha * values[i] + (1.0 - alpha) * prev
-        out_arr[i] = prev
-    return pd.Series(out_arr, index=series.index, name=series.name)
+    if len(series) < length:
+        return pd.Series(float("nan"), index=series.index, dtype=float, name=series.name)
+    seeded = series.astype(float).copy()
+    seed = seeded.iloc[:length].mean()
+    seeded.iloc[: length - 1] = float("nan")
+    seeded.iloc[length - 1] = seed
+    return seeded.ewm(alpha=alpha, adjust=False, ignore_na=True).mean()
 
 
 def rsi(series: pd.Series, length: int = 14) -> pd.Series:
