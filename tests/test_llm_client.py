@@ -5,7 +5,7 @@ import httpx
 import pytest
 import respx
 
-from llm.client import LLMClient, LLMResponse, MockClient, OpenRouterClient
+from llm.client import LLMClient, LLMResponse, LLMResponseError, MockClient, OpenRouterClient
 
 
 def test_llm_response_is_a_dataclass_with_required_fields():
@@ -202,3 +202,233 @@ async def test_openrouter_client_includes_image_when_provided():
     assert content[1]["type"] == "image_url"
     assert content[1]["image_url"]["url"].startswith("data:image/png;base64,")
     assert content[1]["image_url"]["url"].endswith("AAAA")
+
+
+# ---------------------------------------------------------------------------
+# C4: malformed response handling
+#
+# Pre-fix, `OpenRouterClient.complete` indexed `data["choices"][0]["message"]
+# ["content"]` unguarded. A single malformed-but-200-OK payload from
+# OpenRouter would raise KeyError/IndexError mid-walk and kill the demo.
+# The hardened path must raise `LLMResponseError` (a subclass of
+# RuntimeError) so walkforward can catch it as a transient asset-level
+# error rather than crashing the whole run.
+# ---------------------------------------------------------------------------
+
+
+@respx.mock
+async def test_openrouter_client_raises_llm_response_error_on_missing_choices():
+    respx.post("https://openrouter.ai/api/v1/chat/completions").mock(
+        return_value=httpx.Response(200, json={"usage": {}}),
+    )
+    client = OpenRouterClient(api_key="sk-test")
+    with pytest.raises(LLMResponseError, match="choices"):
+        await client.complete(
+            agent="technical", prompt="x", image_b64=None, model="anthropic/claude-3.5-sonnet",
+        )
+
+
+@respx.mock
+async def test_openrouter_client_raises_llm_response_error_on_empty_choices():
+    respx.post("https://openrouter.ai/api/v1/chat/completions").mock(
+        return_value=httpx.Response(200, json={"choices": [], "usage": {}}),
+    )
+    client = OpenRouterClient(api_key="sk-test")
+    with pytest.raises(LLMResponseError, match="choices"):
+        await client.complete(
+            agent="technical", prompt="x", image_b64=None, model="anthropic/claude-3.5-sonnet",
+        )
+
+
+@respx.mock
+async def test_openrouter_client_raises_llm_response_error_on_missing_message():
+    respx.post("https://openrouter.ai/api/v1/chat/completions").mock(
+        return_value=httpx.Response(200, json={"choices": [{}], "usage": {}}),
+    )
+    client = OpenRouterClient(api_key="sk-test")
+    with pytest.raises(LLMResponseError, match="message"):
+        await client.complete(
+            agent="technical", prompt="x", image_b64=None, model="anthropic/claude-3.5-sonnet",
+        )
+
+
+@respx.mock
+async def test_openrouter_client_raises_llm_response_error_on_missing_content():
+    respx.post("https://openrouter.ai/api/v1/chat/completions").mock(
+        return_value=httpx.Response(200, json={"choices": [{"message": {}}], "usage": {}}),
+    )
+    client = OpenRouterClient(api_key="sk-test")
+    with pytest.raises(LLMResponseError, match="content"):
+        await client.complete(
+            agent="technical", prompt="x", image_b64=None, model="anthropic/claude-3.5-sonnet",
+        )
+
+
+@respx.mock
+async def test_openrouter_client_raises_llm_response_error_on_invalid_json():
+    respx.post("https://openrouter.ai/api/v1/chat/completions").mock(
+        return_value=httpx.Response(200, text="<html>not json</html>"),
+    )
+    client = OpenRouterClient(api_key="sk-test")
+    with pytest.raises(LLMResponseError, match="JSON"):
+        await client.complete(
+            agent="technical", prompt="x", image_b64=None, model="anthropic/claude-3.5-sonnet",
+        )
+
+
+def test_llm_response_error_is_a_runtime_error_subclass():
+    """walkforward and other callers catch RuntimeError as a transient class."""
+    assert issubclass(LLMResponseError, RuntimeError)
+
+
+# ---------------------------------------------------------------------------
+# C4 (retry): retry/backoff on transient OpenRouter failures
+#
+# Pre-fix, a single 429/503 from OpenRouter aborted the asset (no retry).
+# The hardened client retries up to 3 times with exponential backoff
+# (0.5s, 1s, 2s) on:
+#   - HTTP 429 (rate limit)
+#   - HTTP 5xx (server errors)
+#   - httpx.TransportError (network blip)
+#   - asyncio.TimeoutError
+# Non-retryable: 4xx other than 429 (auth, bad request) raises immediately.
+# ---------------------------------------------------------------------------
+
+
+@respx.mock
+async def test_openrouter_client_retries_on_429_and_succeeds(monkeypatch):
+    sleeps: list[float] = []
+
+    async def fake_sleep(s: float) -> None:
+        sleeps.append(s)
+
+    monkeypatch.setattr("llm.client.asyncio.sleep", fake_sleep)
+
+    route = respx.post("https://openrouter.ai/api/v1/chat/completions").mock(
+        side_effect=[
+            httpx.Response(429, json={"error": "rate limit"}),
+            httpx.Response(429, json={"error": "rate limit"}),
+            httpx.Response(
+                200,
+                json={
+                    "choices": [{"message": {"content": "BUY 0.8 ok"}}],
+                    "usage": {"prompt_tokens": 1, "completion_tokens": 1},
+                },
+            ),
+        ]
+    )
+    client = OpenRouterClient(api_key="sk-test")
+    r = await client.complete(
+        agent="technical", prompt="x", image_b64=None, model="anthropic/claude-3.5-sonnet",
+    )
+    assert r.content == "BUY 0.8 ok"
+    assert route.call_count == 3
+    assert sleeps == [0.5, 1.0]
+
+
+@respx.mock
+async def test_openrouter_client_retries_on_503_and_succeeds(monkeypatch):
+    async def fake_sleep(_s: float) -> None:
+        pass
+
+    monkeypatch.setattr("llm.client.asyncio.sleep", fake_sleep)
+
+    route = respx.post("https://openrouter.ai/api/v1/chat/completions").mock(
+        side_effect=[
+            httpx.Response(503),
+            httpx.Response(
+                200,
+                json={
+                    "choices": [{"message": {"content": "HOLD 0.5 ok"}}],
+                    "usage": {},
+                },
+            ),
+        ]
+    )
+    client = OpenRouterClient(api_key="sk-test")
+    r = await client.complete(
+        agent="technical", prompt="x", image_b64=None, model="anthropic/claude-3.5-sonnet",
+    )
+    assert r.content == "HOLD 0.5 ok"
+    assert route.call_count == 2
+
+
+@respx.mock
+async def test_openrouter_client_gives_up_after_3_attempts(monkeypatch):
+    async def fake_sleep(_s: float) -> None:
+        pass
+
+    monkeypatch.setattr("llm.client.asyncio.sleep", fake_sleep)
+
+    route = respx.post("https://openrouter.ai/api/v1/chat/completions").mock(
+        return_value=httpx.Response(503),
+    )
+    client = OpenRouterClient(api_key="sk-test")
+    with pytest.raises(httpx.HTTPStatusError):
+        await client.complete(
+            agent="technical", prompt="x", image_b64=None, model="anthropic/claude-3.5-sonnet",
+        )
+    assert route.call_count == 3
+
+
+@respx.mock
+async def test_openrouter_client_does_not_retry_on_400(monkeypatch):
+    async def fake_sleep(_s: float) -> None:
+        pass
+
+    monkeypatch.setattr("llm.client.asyncio.sleep", fake_sleep)
+
+    route = respx.post("https://openrouter.ai/api/v1/chat/completions").mock(
+        return_value=httpx.Response(400, json={"error": "bad request"}),
+    )
+    client = OpenRouterClient(api_key="sk-test")
+    with pytest.raises(httpx.HTTPStatusError):
+        await client.complete(
+            agent="technical", prompt="x", image_b64=None, model="anthropic/claude-3.5-sonnet",
+        )
+    assert route.call_count == 1
+
+
+@respx.mock
+async def test_openrouter_client_does_not_retry_on_401(monkeypatch):
+    async def fake_sleep(_s: float) -> None:
+        pass
+
+    monkeypatch.setattr("llm.client.asyncio.sleep", fake_sleep)
+
+    route = respx.post("https://openrouter.ai/api/v1/chat/completions").mock(
+        return_value=httpx.Response(401, json={"error": "unauthorized"}),
+    )
+    client = OpenRouterClient(api_key="sk-test")
+    with pytest.raises(httpx.HTTPStatusError):
+        await client.complete(
+            agent="technical", prompt="x", image_b64=None, model="anthropic/claude-3.5-sonnet",
+        )
+    assert route.call_count == 1
+
+
+@respx.mock
+async def test_openrouter_client_retries_on_transport_error(monkeypatch):
+    async def fake_sleep(_s: float) -> None:
+        pass
+
+    monkeypatch.setattr("llm.client.asyncio.sleep", fake_sleep)
+
+    route = respx.post("https://openrouter.ai/api/v1/chat/completions").mock(
+        side_effect=[
+            httpx.ConnectError("network blip"),
+            httpx.Response(
+                200,
+                json={
+                    "choices": [{"message": {"content": "BUY 0.7 ok"}}],
+                    "usage": {},
+                },
+            ),
+        ]
+    )
+    client = OpenRouterClient(api_key="sk-test")
+    r = await client.complete(
+        agent="technical", prompt="x", image_b64=None, model="anthropic/claude-3.5-sonnet",
+    )
+    assert r.content == "BUY 0.7 ok"
+    assert route.call_count == 2
