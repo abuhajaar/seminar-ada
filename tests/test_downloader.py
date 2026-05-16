@@ -20,13 +20,23 @@ def _ms(dt: datetime) -> int:
 
 def test_download_ohlcv_writes_csv_and_is_idempotent(tmp_path: Path):
     fake_exchange = MagicMock()
-    # ccxt returns: [[ts_ms, open, high, low, close, volume], ...]
+    # Raw Binance klines: 12 columns per row.
+    # [open_time, o, h, l, c, volume, close_time, quote_vol, n_trades,
+    #  taker_buy_base_vol, taker_buy_quote_vol, ignore]
     rows = [
-        [_ms(datetime(2025, 4, 1, h)), 100 + h, 101 + h, 99 + h, 100.5 + h, 10.0 + h]
+        [
+            _ms(datetime(2025, 4, 1, h)),
+            f"{100 + h}", f"{101 + h}", f"{99 + h}", f"{100.5 + h}",
+            f"{10.0 + h}",
+            _ms(datetime(2025, 4, 1, h)) + 3_599_999,
+            "0", 0,
+            f"{(10.0 + h) * 0.6}",  # taker_buy_base_volume = 60% of volume
+            "0", "0",
+        ]
         for h in range(24)
     ]
     fake_exchange.parse_timeframe.return_value = 3600  # seconds in 1h
-    fake_exchange.fetch_ohlcv.return_value = rows
+    fake_exchange.publicGetKlines.return_value = rows
 
     out = download_ohlcv(
         symbol="BTC/USDT",
@@ -40,16 +50,21 @@ def test_download_ohlcv_writes_csv_and_is_idempotent(tmp_path: Path):
     assert out.exists()
     df = pd.read_csv(out, parse_dates=["timestamp"])
     assert len(df) == 24
-    assert list(df.columns) == ["timestamp", "open", "high", "low", "close", "volume"]
+    assert list(df.columns) == [
+        "timestamp", "open", "high", "low", "close", "volume", "taker_buy_volume",
+    ]
+    # Spot-check: row 0 volume=10.0, taker_buy=6.0
+    assert df["volume"].iloc[0] == 10.0
+    assert df["taker_buy_volume"].iloc[0] == 6.0
 
     # Re-running with same args should NOT re-fetch (idempotent).
-    fake_exchange.fetch_ohlcv.reset_mock()
+    fake_exchange.publicGetKlines.reset_mock()
     download_ohlcv(
         symbol="BTC/USDT", timeframe="1h",
         start=date(2025, 4, 1), end=date(2025, 4, 2),
         exchange=fake_exchange, root=tmp_path,
     )
-    fake_exchange.fetch_ohlcv.assert_not_called()
+    fake_exchange.publicGetKlines.assert_not_called()
 
 
 @respx.mock

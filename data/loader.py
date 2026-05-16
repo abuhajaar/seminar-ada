@@ -58,7 +58,11 @@ def load_bars(
             f"in [{start}, {end}): rows {len(ohlcv)} vs {len(cvd)}"
         )
 
-    merged = ohlcv.merge(cvd, on="timestamp", how="inner")
+    merged = ohlcv.merge(
+        cvd.drop(columns=["taker_buy_volume"], errors="ignore"),
+        on="timestamp",
+        how="inner",
+    )
     for row in merged.itertuples(index=False):
         yield Bar(
             timestamp=row.timestamp.to_pydatetime(),

@@ -45,3 +45,38 @@ def aggregate_cvd(trades: pd.DataFrame, timeframe: str) -> pd.DataFrame:
     out = pd.concat([grouped_signed, grouped_buy], axis=1)
     out["cvd"] = out["cvd_delta"].cumsum()
     return out.reset_index()[["timestamp", "cvd_delta", "cvd", "taker_buy_volume"]]
+
+
+def cvd_from_klines(ohlcv: pd.DataFrame) -> pd.DataFrame:
+    """Derive per-bar CVD directly from Binance kline `taker_buy_volume`.
+
+    Mathematically equivalent to `aggregate_cvd` but skips the aggTrades download:
+    since `volume = taker_buy + taker_sell` and `cvd_delta = taker_buy - taker_sell`,
+    `cvd_delta = 2 * taker_buy_volume - volume`.
+
+    Returns the same schema as `aggregate_cvd` so the loader joins unchanged:
+    `timestamp`, `cvd_delta`, `cvd`, `taker_buy_volume`.
+
+    Raises `ValueError` if the input OHLCV frame lacks `taker_buy_volume` — that
+    means the file was written by the old downloader; redownload it.
+    """
+    required = {"timestamp", "volume", "taker_buy_volume"}
+    missing = required - set(ohlcv.columns)
+    if missing:
+        raise ValueError(
+            f"cvd_from_klines requires columns {sorted(required)}, "
+            f"missing {sorted(missing)} (stale OHLCV file?)"
+        )
+    if len(ohlcv) == 0:
+        return pd.DataFrame(columns=["timestamp", "cvd_delta", "cvd", "taker_buy_volume"])
+
+    cvd_delta = 2.0 * ohlcv["taker_buy_volume"] - ohlcv["volume"]
+    out = pd.DataFrame(
+        {
+            "timestamp": ohlcv["timestamp"].reset_index(drop=True),
+            "cvd_delta": cvd_delta.reset_index(drop=True),
+            "cvd": cvd_delta.cumsum().reset_index(drop=True),
+            "taker_buy_volume": ohlcv["taker_buy_volume"].reset_index(drop=True),
+        }
+    )
+    return out

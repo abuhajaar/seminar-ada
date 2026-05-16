@@ -32,6 +32,13 @@ def _date_to_ms(d: date, *, end: bool = False) -> int:
     return int(dt.timestamp() * 1000)
 
 
+_TF_TO_BINANCE_INTERVAL = {
+    "1m": "1m", "5m": "5m", "15m": "15m",
+    "1h": "1h", "4h": "4h", "1d": "1d",
+}
+KLINES_PAGE_LIMIT = 1000
+
+
 def download_ohlcv(
     symbol: str,
     timeframe: str,
@@ -40,10 +47,20 @@ def download_ohlcv(
     exchange: Any,
     root: Path = DEFAULT_ROOT,
 ) -> Path:
-    """Download OHLCV using a ccxt exchange instance.
+    """Download OHLCV (with `taker_buy_volume`) using a ccxt exchange instance.
+
+    Uses Binance's raw `publicGetKlines` endpoint so we can keep the 10th column
+    (`taker_buy_base_volume`). That column lets `data.cvd.cvd_from_klines` derive
+    per-bar CVD without touching `aggTrades` — a 60-200x speedup vs the
+    tick-by-tick REST path.
 
     Idempotent: if the target CSV already exists and covers [start, end), skip.
     """
+    if timeframe not in _TF_TO_BINANCE_INTERVAL:
+        raise ValueError(
+            f"Unsupported timeframe '{timeframe}'. "
+            f"Supported: {sorted(_TF_TO_BINANCE_INTERVAL)}"
+        )
     out = ohlcv_csv_path(symbol, timeframe, root=root)
     out.parent.mkdir(parents=True, exist_ok=True)
 
@@ -54,28 +71,48 @@ def download_ohlcv(
 
     if out.exists():
         existing = pd.read_csv(out, parse_dates=["timestamp"])
-        if len(existing) > 0:
+        if len(existing) > 0 and "taker_buy_volume" in existing.columns:
             cov_start = int(existing["timestamp"].iloc[0].timestamp() * 1000)
             cov_end = int(existing["timestamp"].iloc[-1].timestamp() * 1000) + tf_ms
             if cov_start <= start_ms and cov_end >= end_ms:
-                return out  # already fully covered
+                return out  # already fully covered with the new schema
 
-    rows: list[list[float]] = []
+    market_symbol = symbol.replace("/", "")
+    rows: list[list[Any]] = []
     cursor = start_ms
     while cursor < end_ms:
-        batch = exchange.fetch_ohlcv(symbol, timeframe, since=cursor, limit=1000)
+        batch = exchange.publicGetKlines(
+            {
+                "symbol": market_symbol,
+                "interval": _TF_TO_BINANCE_INTERVAL[timeframe],
+                "startTime": cursor,
+                "endTime": end_ms - 1,
+                "limit": KLINES_PAGE_LIMIT,
+            }
+        )
         if not batch:
             break
         rows.extend(batch)
-        cursor = batch[-1][0] + tf_ms
-        if len(batch) < 1000:
+        cursor = int(batch[-1][0]) + tf_ms
+        if len(batch) < KLINES_PAGE_LIMIT:
             break
 
+    # Raw kline cols: [open_time, o, h, l, c, volume, close_time, quote_vol,
+    #                  n_trades, taker_buy_base_vol, taker_buy_quote_vol, ignore]
     df = pd.DataFrame(
-        rows, columns=["timestamp", "open", "high", "low", "close", "volume"]
+        rows,
+        columns=[
+            "timestamp", "open", "high", "low", "close", "volume",
+            "_close_time", "_quote_vol", "_n_trades",
+            "taker_buy_volume", "_taker_buy_quote_vol", "_ignore",
+        ],
     )
     df = df[df["timestamp"] < end_ms]
+    # Binance returns numerics as strings; coerce.
+    for col in ("open", "high", "low", "close", "volume", "taker_buy_volume"):
+        df[col] = pd.to_numeric(df[col])
     df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms", utc=True)
+    df = df[["timestamp", "open", "high", "low", "close", "volume", "taker_buy_volume"]]
     df.to_csv(out, index=False)
     return out
 
