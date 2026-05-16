@@ -109,12 +109,21 @@ class LLMAgentStrategy:
         # SuperTrend(10, 3) — same parameters as `TraditionalStrategy` so the
         # LLM bot's stop placement and risk-sized position notional are directly
         # comparable in the seminar demo. The line itself is the stop level;
-        # `dir` is unused here because the LLM consensus replaces the regime
-        # filter that traditional uses `dir` for.
+        # `dir` is the regime sign (+1 long-friendly, -1 short-friendly) and
+        # acts as a side-aware gate (re-audit C3): the consensus may vote
+        # SELL during an up-regime (or BUY during a down-regime), in which
+        # case `st_line` sits on the wrong side of price and the engine's
+        # H4 stop-direction gate (`core/engine.py:115`) silently drops the
+        # order. We reject those conflicting signals at source by emitting
+        # HOLD instead of leaking a mis-sided stop downstream.
         st_df = supertrend(highs, lows, closes, length=10, multiplier=3.0)
         st_line_raw = st_df["st"].iloc[-1]
+        st_dir_raw = st_df["dir"].iloc[-1]
         st_line: float | None = (
             float(st_line_raw) if not pd.isna(st_line_raw) else None
+        )
+        st_dir: int | None = (
+            int(st_dir_raw) if not pd.isna(st_dir_raw) else None
         )
 
         features: dict[str, float] = {
@@ -165,6 +174,27 @@ class LLMAgentStrategy:
         # only to satisfy the dataclass field default. Hence the union-attr ignore.
         final = await self._graph.ainvoke(initial)  # type: ignore[union-attr]
         d = final["decision"]
+        # Side-aware regime gate (re-audit C3): reject BUY in a down-regime
+        # and SELL in an up-regime. Without this, `st_line` would be a
+        # wrong-sided stop (long stop for a short trade or vice versa) and
+        # the engine would silently drop the order at the H4 stop-direction
+        # gate — the same symptom that produced "zero LLM short trades" in
+        # historical runs. Explicit HOLD at source surfaces the rejection
+        # in the signal reasoning instead of swallowing it downstream.
+        if (
+            (d.action is Action.BUY and st_dir == -1)
+            or (d.action is Action.SELL and st_dir == 1)
+        ):
+            regime = "up" if st_dir == 1 else "down"
+            return Signal(
+                action=Action.HOLD,
+                confidence=d.confidence,
+                reasoning=(
+                    f"regime-conflict: consensus={d.action.value} "
+                    f"st_dir={st_dir} ({regime}-regime); {d.rationale}"
+                ),
+                stop_loss=None,
+            )
         # Only emit a stop on directional signals — HOLD does not open a
         # position, so `stop_loss` is meaningless there. `core/engine.py`
         # gates `_open_long/_open_short` on `signal.stop_loss is not None`,

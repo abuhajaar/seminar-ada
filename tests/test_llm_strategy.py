@@ -321,3 +321,154 @@ async def test_nan_indicator_yields_hold_not_propagated() -> None:
     assert sig.stop_loss is None
     # Either the graph was never called (guard short-circuited) or, if it
     # was, every prompt was nan-free (asserted inside the client).
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# C3 (re-audit): side-aware stop placement. The LLM consensus can vote
+# SELL in a SuperTrend up-regime (or BUY in a down-regime); in that case
+# `st_line` sits on the wrong side of price and the engine silently rejects
+# the order (H4 gate: long stop must be < entry, short stop must be > entry).
+# The strategy must reject those conflicting signals at source by returning
+# HOLD with `stop_loss=None` instead of leaking a mis-sided stop downstream.
+# ──────────────────────────────────────────────────────────────────────────
+
+
+class _UnanimousAnalystClient:
+    """Forces every analyst (technical/visual/qabba) to vote the same side.
+
+    The decision node is deterministic weighted-consensus math (not an LLM
+    call) over the three analyst reports. Making all three analysts vote
+    the same side with high confidence guarantees the consensus score
+    clears any reasonable threshold, regardless of indicator features.
+
+    This lets us hold the regime (SuperTrend dir) fixed via the bar series
+    while independently driving the consensus action via this client.
+    """
+
+    def __init__(self, action: str, confidence: float = 0.9) -> None:
+        self._action = action.upper()
+        self._confidence = confidence
+
+    async def complete(
+        self,
+        *,
+        agent: str,  # noqa: ARG002
+        prompt: str,  # noqa: ARG002
+        image_b64: str | None = None,  # noqa: ARG002
+        model: str = "mock",
+    ) -> object:
+        from llm.client import LLMResponse
+
+        content = f"{self._action} {self._confidence:.2f} unanimous"
+        return LLMResponse(
+            content=content, model=model,
+            input_tokens=len(content) // 4, output_tokens=len(content) // 4,
+        )
+
+
+@pytest.mark.asyncio
+async def test_sell_in_up_regime_returns_hold_with_no_stop() -> None:
+    """SELL during a SuperTrend up-regime must be rejected at source.
+
+    With a monotonically rising close series, SuperTrend(10, 3) settles into
+    ``dir=+1`` (long regime; the trailing line sits *below* price). If the
+    LLM consensus votes SELL anyway, `st_line` would be a long-side stop
+    below the close — wrong-sided for a short. `core/engine.py` would then
+    silently drop the order at H4 (short stop must be above entry).
+
+    The strategy must convert that conflict to HOLD with `stop_loss=None`,
+    so the rejection is explicit at the strategy boundary instead of being
+    swallowed by the engine.
+    """
+    # Force unanimous SELL analyst votes on a bullish ramp.
+    strat = LLMAgentStrategy(
+        client=_UnanimousAnalystClient("SELL"),
+        model="mock",
+        render_image=False,
+        consensus_threshold=0.2,
+    )
+    last: Signal | None = None
+    last_bar: Bar | None = None
+    for i in range(WARMUP_BARS + 5):
+        last_bar = _bar(i)  # default = monotonically rising close
+        last = await strat.on_bar(last_bar, _ctx())
+    assert last is not None
+    assert last_bar is not None
+    assert last.action is Action.HOLD, (
+        f"SELL in up-regime must be rejected to HOLD, got {last.action}"
+    )
+    assert last.stop_loss is None, (
+        f"rejected signal must carry stop_loss=None, got {last.stop_loss}"
+    )
+    assert "regime" in last.reasoning.lower() or "conflict" in last.reasoning.lower(), (
+        f"reasoning should mention the regime/conflict rejection: {last.reasoning!r}"
+    )
+
+
+@pytest.mark.asyncio
+async def test_buy_in_down_regime_returns_hold_with_no_stop() -> None:
+    """BUY during a SuperTrend down-regime must be rejected at source.
+
+    Symmetric to the SELL-in-up-regime case: with a monotonically falling
+    close series, SuperTrend settles into ``dir=-1`` and `st_line` sits
+    *above* price — a valid short stop, but wrong-sided for a long. The
+    engine's H4 long-stop gate (must be below entry) would silently reject.
+    """
+    # Bearish ramp: closes decreasing from a high anchor.
+    def _bear_bar(i: int) -> Bar:
+        # Mirror of _bar's default but with descending close.
+        c = 50_000.0 - i * 10.0
+        from datetime import UTC, datetime, timedelta
+        start = datetime(2024, 1, 1, tzinfo=UTC)
+        return Bar(
+            timestamp=start + timedelta(hours=i),
+            open=c + 5.0, high=c + 50.0, low=c - 50.0, close=c,
+            volume=1.0, taker_buy_volume=0.4,
+            cvd=-100.0 * i, cvd_delta=-100.0,
+        )
+
+    strat = LLMAgentStrategy(
+        client=_UnanimousAnalystClient("BUY"),
+        model="mock",
+        render_image=False,
+        consensus_threshold=0.2,
+    )
+    last: Signal | None = None
+    last_bar: Bar | None = None
+    for i in range(WARMUP_BARS + 5):
+        last_bar = _bear_bar(i)
+        last = await strat.on_bar(last_bar, _ctx())
+    assert last is not None
+    assert last_bar is not None
+    assert last.action is Action.HOLD, (
+        f"BUY in down-regime must be rejected to HOLD, got {last.action}"
+    )
+    assert last.stop_loss is None, (
+        f"rejected signal must carry stop_loss=None, got {last.stop_loss}"
+    )
+
+
+@pytest.mark.asyncio
+async def test_buy_in_up_regime_still_emits_long_signal() -> None:
+    """Sanity: the regime guard does NOT block aligned signals.
+
+    BUY + dir=+1 is the canonical aligned case; the strategy must still
+    return BUY with a finite long-side stop below close. This guards
+    against an over-broad fix that defaults everything to HOLD.
+    """
+    strat = LLMAgentStrategy(
+        client=_UnanimousAnalystClient("BUY"),
+        model="mock",
+        render_image=False,
+        consensus_threshold=0.2,
+    )
+    last: Signal | None = None
+    last_bar: Bar | None = None
+    for i in range(WARMUP_BARS + 5):
+        last_bar = _bar(i)  # rising close ⇒ dir=+1
+        last = await strat.on_bar(last_bar, _ctx())
+    assert last is not None
+    assert last_bar is not None
+    assert last.action is Action.BUY
+    assert last.stop_loss is not None
+    assert last.stop_loss < last_bar.close
