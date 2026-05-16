@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 
 from llm.cache import CachedClient, cache_key
-from llm.client import MockClient
+from llm.client import LLMResponse, MockClient
 
 
 def test_cache_key_stable_for_same_inputs():
@@ -268,3 +268,75 @@ def test_peek_does_not_call_inner(tmp_path: Path):
     # Miss path
     cached.peek(agent="technical", prompt="x", image_b64=None, model="m", bar_ts=1)
     assert stub.calls == 0
+
+
+async def test_concurrent_writes_to_same_key_do_not_corrupt(tmp_path: Path):
+    """Two CachedClient instances sharing one cache dir must not produce a
+    truncated/half-written file when they race on the same key.
+
+    Audit fix C2: previously the tmp-file name was a deterministic
+    ``<key>.json.tmp`` shared across processes/instances, so a slow writer
+    could see its tmp file truncated by a faster one mid-write. The fix
+    uses a unique tmp name per write so each writer atomically replaces
+    with a complete payload.
+
+    This test directly inspects the path the writer uses by monkeypatching
+    ``os.replace`` to record the source tmp path and asserting the two
+    parallel writers picked *different* tmp names (so neither can clobber
+    the other before its own replace lands).
+    """
+    import asyncio
+    import os as _os
+
+    class _SlowClient:
+        def __init__(self, content: str) -> None:
+            self.content = content
+
+        async def complete(self, **kwargs) -> LLMResponse:
+            # Yield so the two writers interleave.
+            await asyncio.sleep(0)
+            return LLMResponse(
+                content=self.content,
+                model=kwargs["model"],
+                input_tokens=1,
+                output_tokens=1,
+            )
+
+    seen_tmp_paths: list[str] = []
+    real_replace = _os.replace
+
+    def _spy_replace(src, dst):
+        seen_tmp_paths.append(str(src))
+        return real_replace(src, dst)
+
+    c1 = CachedClient(inner=_SlowClient("A" * 4096), cache_dir=tmp_path)
+    c2 = CachedClient(inner=_SlowClient("B" * 4096), cache_dir=tmp_path)
+
+    kwargs = {
+        "agent": "technical",
+        "prompt": "same-prompt",
+        "image_b64": None,
+        "model": "mock",
+        "bar_ts": 1,
+    }
+
+    import unittest.mock as _mock
+    with _mock.patch("llm.cache.os.replace", side_effect=_spy_replace):
+        await asyncio.gather(c1.complete(**kwargs), c2.complete(**kwargs))
+
+    # Each writer must use a *unique* tmp-file path so they cannot
+    # accidentally truncate each other's in-flight write.
+    assert len(seen_tmp_paths) == 2
+    assert seen_tmp_paths[0] != seen_tmp_paths[1], (
+        f"Both writers used the same tmp path: {seen_tmp_paths}"
+    )
+
+    # And no stray tmp files left behind.
+    json_files = list(tmp_path.rglob("*.json"))
+    tmp_files = list(tmp_path.rglob("*.json.tmp")) + list(tmp_path.rglob("*.tmp"))
+    assert len(json_files) == 1, json_files
+    assert tmp_files == [], tmp_files
+
+    blob = json.loads(json_files[0].read_text(encoding="utf-8"))
+    assert blob["content"] in {"A" * 4096, "B" * 4096}
+    assert blob["model"] == "mock"

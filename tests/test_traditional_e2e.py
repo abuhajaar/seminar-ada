@@ -26,9 +26,11 @@ def _seed_synthetic(tmp_path: Path, n: int = 300) -> None:
     highs = np.maximum(opens, closes) * (1 + rng.uniform(0, 0.005, n))
     lows = np.minimum(opens, closes) * (1 - rng.uniform(0, 0.005, n))
     ts = pd.date_range("2025-04-01", periods=n, freq="1h", tz="UTC")
+    volume = rng.uniform(500, 1500, n)
+    taker_buy = rng.uniform(200, 800, n)
     ohlcv = pd.DataFrame({
         "timestamp": ts, "open": opens, "high": highs, "low": lows,
-        "close": closes, "volume": rng.uniform(500, 1500, n),
+        "close": closes, "volume": volume, "taker_buy_volume": taker_buy,
     })
     op = ohlcv_csv_path("BTC/USDT", "1h", root=tmp_path)
     op.parent.mkdir(parents=True, exist_ok=True)
@@ -36,7 +38,6 @@ def _seed_synthetic(tmp_path: Path, n: int = 300) -> None:
 
     cvd_delta = rng.normal(0, 5, n)
     cvd = np.cumsum(cvd_delta)
-    taker_buy = rng.uniform(200, 800, n)
     cvd_df = pd.DataFrame({
         "timestamp": ts, "cvd_delta": cvd_delta, "cvd": cvd,
         "taker_buy_volume": taker_buy,

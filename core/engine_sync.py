@@ -19,24 +19,73 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-from core.broker import Broker
+from core.broker import Broker, _fee
 from core.metrics import MetricsDict, compute_metrics
 from core.portfolio import Portfolio
 from core.types import Action, Bar, Order
 from strategies.base import Context, Strategy
 
 
-def size_position(equity: float, risk_pct: float, entry: float, stop: float) -> float:
-    """Fixed-fractional position size: risk_dollars / per-unit risk.
+def size_position(
+    equity: float,
+    risk_pct: float,
+    entry: float,
+    stop: float,
+    *,
+    action: Action = Action.BUY,
+    taker_fee_bps: float = 0.0,
+    slippage_bps: float = 0.0,
+) -> float:
+    """Fixed-fractional position size, accounting for fees + slippage drag.
 
-    Shared by both `engine_sync.run_sync` and `engine.run_async` so the two
-    engines compute identical quantities for identical inputs.
+    Returns the largest ``qty`` such that a stop-out loses no more than
+    ``equity * risk_pct``. For a long entry the realized stop-out loss per
+    unit is::
+
+        (entry_eff - stop) + entry_eff * f + stop * f      [BUY]
+
+    where ``entry_eff = entry * (1 + slippage_bps/1e4)`` and ``f =
+    taker_fee_bps/1e4``. The symmetric short formula uses ``entry_eff =
+    entry * (1 - slippage_bps/1e4)`` and the stop sits *above* entry.
+
+    Pre-fix this function ignored both fees and slippage (audit H5), so the
+    realized loss on a stop-out routinely exceeded ``risk_pct`` (~2% drag
+    for the seminar's 4 bps + 2 bps configuration).
+
+    Args:
+        equity: Current portfolio equity used as the risk base.
+        risk_pct: Fraction of equity at risk on a stop-out (e.g. ``0.02``).
+        entry: Quoted entry price (bar close on signal bar; fill happens at
+            the next bar's open at this same level for sizing purposes).
+        stop: Stop-loss price.
+        action: ``Action.BUY`` (long) or ``Action.SELL`` (short). Defaults
+            to BUY for backwards compat with old call sites; tests in
+            ``tests/test_engine_sync.py`` cover both directions.
+        taker_fee_bps: Taker fee in basis points (4 bps = 0.04%).
+        slippage_bps: Symmetric slippage in basis points.
+
+    Returns:
+        ``qty`` (>= 0) such that worst-case stop-out loss <= ``equity *
+        risk_pct``. Returns ``0.0`` if the stop is on the wrong side of
+        entry or if per-unit risk is non-positive (defense in depth — the
+        engine already rejects wrong-sided stops; see H4).
     """
     risk_dollars = equity * risk_pct
-    risk_per_unit = abs(entry - stop)
-    if risk_per_unit == 0.0:
+    f = taker_fee_bps / 10_000.0
+    s = slippage_bps / 10_000.0
+    if action is Action.BUY:
+        entry_eff = entry * (1.0 + s)
+        # Stop must sit below entry_eff; otherwise per-unit loss is non-positive.
+        per_unit_loss = (entry_eff - stop) + entry_eff * f + stop * f
+    elif action is Action.SELL:
+        entry_eff = entry * (1.0 - s)
+        # Short: stop sits above entry_eff.
+        per_unit_loss = (stop - entry_eff) + entry_eff * f + stop * f
+    else:
         return 0.0
-    return risk_dollars / risk_per_unit
+    if per_unit_loss <= 0.0:
+        return 0.0
+    return risk_dollars / per_unit_loss
 
 
 async def run_sync(
@@ -56,9 +105,11 @@ async def run_sync(
         slippage_bps=slippage_bps,
     )
     bar_count = 0
+    last_bar: Bar | None = None
 
     for bar in bars:
         bar_count += 1
+        last_bar = bar
         # 1. Check stops on the freshly-opened bar (uses high/low).
         broker.check_stops(bar)
         # 2. Fill any pending order at this bar's open.
@@ -88,22 +139,50 @@ async def run_sync(
             else:
                 # Opening trade: size from risk + stop.
                 if signal.stop_loss is not None:
-                    qty = size_position(
-                        equity=ctx.equity, risk_pct=risk_pct,
-                        entry=bar.close, stop=signal.stop_loss,
+                    # Reject wrong-sided stops (audit H4): a long needs stop
+                    # below entry; a short needs stop above. Otherwise
+                    # `size_position` uses abs() and produces a position
+                    # that gets stopped out on the next bar at a guaranteed
+                    # loss far exceeding `risk_pct`.
+                    wrong_side = (
+                        (signal.action is Action.BUY and signal.stop_loss >= bar.close)
+                        or (signal.action is Action.SELL and signal.stop_loss <= bar.close)
                     )
-                    if qty > 0.0:
-                        broker.queue(Order(
-                            symbol=symbol, action=signal.action, quantity=qty,
-                            stop_loss=signal.stop_loss,
-                            created_ts_ms=int(bar.timestamp.timestamp() * 1000),
-                        ))
+                    if wrong_side:
+                        pass  # refuse; no order queued
+                    else:
+                        qty = size_position(
+                            equity=ctx.equity, risk_pct=risk_pct,
+                            entry=bar.close, stop=signal.stop_loss,
+                            action=signal.action,
+                            taker_fee_bps=taker_fee_bps,
+                            slippage_bps=slippage_bps,
+                        )
+                        if qty > 0.0:
+                            broker.queue(Order(
+                                symbol=symbol, action=signal.action, quantity=qty,
+                                stop_loss=signal.stop_loss,
+                                created_ts_ms=int(bar.timestamp.timestamp() * 1000),
+                            ))
 
         # 5. Record equity sample at bar close.
         portfolio.mark(bar.timestamp, bar.close)
 
     if bar_count < 2:
         raise ValueError("need at least 2 bars to compute metrics")
+
+    # End-of-run flatten: any dangling position is synth-closed at the last
+    # bar's close so `closed_trades` accounts for every position taken. Without
+    # this, `compute_metrics` sees Σ trade.pnl ≠ equity[-1] - equity[0] and
+    # silently drops the open final leg from win/loss/profit-factor counts.
+    # Uses the taker fee path; no slippage (mirrors stop-fill semantics).
+    if portfolio.position is not None:
+        assert last_bar is not None  # bar_count >= 2 guarantees this
+        exit_price = last_bar.close
+        exit_fee = _fee(exit_price * portfolio.position.quantity, taker_fee_bps)
+        portfolio.close_position(
+            price=exit_price, fee=exit_fee, timestamp=last_bar.timestamp,
+        )
 
     metrics = compute_metrics(
         equity_curve=portfolio.equity_curve(),

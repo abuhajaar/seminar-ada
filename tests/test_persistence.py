@@ -104,6 +104,35 @@ def test_write_trades_round_trip(tmp_path: Path) -> None:
     assert int(row1["bars_held"]) == 2
 
 
+def test_write_trades_bars_held_respects_timeframe(tmp_path: Path) -> None:
+    """`bars_held` must be derived from the run timeframe, not hardcoded to 1h.
+
+    A 3-hour gap (entry 0h → exit 3h) at 15m timeframe = 12 bars; at 1h = 3.
+    """
+    p = _build_two_trade_portfolio()
+    out_15m = tmp_path / "trades_15m.csv"
+    write_trades(out_15m, p, timeframe="15m")
+    df_15m = pd.read_csv(out_15m)
+    # Trade 1: 3h gap / 15m = 12 bars
+    assert int(df_15m.iloc[0]["bars_held"]) == 12
+    # Trade 2: 2h gap / 15m = 8 bars
+    assert int(df_15m.iloc[1]["bars_held"]) == 8
+
+    out_4h = tmp_path / "trades_4h.csv"
+    write_trades(out_4h, p, timeframe="4h")
+    df_4h = pd.read_csv(out_4h)
+    # Trade 1: 3h / 4h = 0 bars (floor); Trade 2: 2h / 4h = 0 bars
+    assert int(df_4h.iloc[0]["bars_held"]) == 0
+    assert int(df_4h.iloc[1]["bars_held"]) == 0
+
+    # Default (no kwarg) preserves prior 1h behavior for back-compat.
+    out_default = tmp_path / "trades_default.csv"
+    write_trades(out_default, p)
+    df_default = pd.read_csv(out_default)
+    assert int(df_default.iloc[0]["bars_held"]) == 3
+    assert int(df_default.iloc[1]["bars_held"]) == 2
+
+
 def test_write_trades_empty_portfolio(tmp_path: Path) -> None:
     p = Portfolio(initial_balance=10_000.0)
     out = tmp_path / "trades.csv"

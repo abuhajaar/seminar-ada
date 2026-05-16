@@ -14,6 +14,7 @@ import contextlib
 import hashlib
 import json
 import os
+import tempfile
 from dataclasses import asdict
 from pathlib import Path
 
@@ -148,10 +149,27 @@ class CachedClient:
             resp = await self._inner.complete(
                 agent=agent, prompt=prompt, image_b64=image_b64, model=model
             )
-            # Atomic write: temp file on the same volume + os.replace ensures
-            # readers see either the previous absence or the complete new file
-            # — no partial reads even if we crash mid-write.
-            tmp = path.with_suffix(".json.tmp")
-            tmp.write_text(json.dumps(asdict(resp), indent=2), encoding="utf-8")
-            os.replace(tmp, path)
+            # Atomic write: a *unique* tmp file on the same volume +
+            # os.replace ensures readers see either the previous absence
+            # or the complete new file — no partial reads even if multiple
+            # writers (separate processes or `CachedClient` instances
+            # sharing one cache_dir) race on the same key. Using
+            # tempfile.mkstemp avoids the deterministic ``<key>.json.tmp``
+            # name that previously allowed two writers to truncate each
+            # other's in-flight tmp file (audit C2).
+            payload = json.dumps(asdict(resp), indent=2).encode("utf-8")
+            fd, tmp_name = tempfile.mkstemp(
+                prefix=f"{path.name}.", suffix=".tmp", dir=str(path.parent),
+            )
+            tmp = Path(tmp_name)
+            try:
+                with os.fdopen(fd, "wb") as fh:
+                    fh.write(payload)
+                os.replace(tmp, path)
+            except BaseException:
+                # On any failure (including OSError from replace), clean
+                # up the tmp file so we don't leak artifacts on disk.
+                with contextlib.suppress(OSError):
+                    tmp.unlink()
+                raise
             return resp

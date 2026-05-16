@@ -52,13 +52,33 @@ _AGG_KEYS: tuple[str, ...] = (
 # ── trades CSV ────────────────────────────────────────────────────────────
 
 
-def _trade_row(t: Trade) -> dict[str, Any]:
+# Timeframe suffix → seconds. Matches the lowercase suffix produced by ccxt
+# (`m`, `h`, `d`, `w`). Persistence stays free of the ccxt dependency by
+# keeping this table inline.
+_TF_UNIT_SECONDS: dict[str, int] = {
+    "m": 60,
+    "h": 3600,
+    "d": 86400,
+    "w": 604800,
+}
+
+
+def _tf_seconds(timeframe: str) -> int:
+    """Parse a ccxt-style timeframe string (e.g. ``"15m"``, ``"4h"``) to seconds.
+
+    Raises ``ValueError`` on malformed input. The default ``"1h"`` is always
+    valid so legacy callers that don't supply a timeframe keep working.
+    """
+    tf = timeframe.strip().lower()
+    if len(tf) < 2 or not tf[:-1].isdigit() or tf[-1] not in _TF_UNIT_SECONDS:
+        raise ValueError(f"Unrecognized timeframe: {timeframe!r}")
+    return int(tf[:-1]) * _TF_UNIT_SECONDS[tf[-1]]
+
+
+def _trade_row(t: Trade, tf_secs: int) -> dict[str, Any]:
     notional = t.entry_price * t.qty
     pnl_pct = (t.pnl / notional) * 100.0 if notional != 0.0 else 0.0
-    # bars_held assumes a 1h timeframe; emitted as whole hours between entry
-    # and exit. Downstream callers with a different timeframe can rewrite
-    # this column.
-    bars_held = int((t.exit_ts - t.entry_ts).total_seconds() // 3600)
+    bars_held = int((t.exit_ts - t.entry_ts).total_seconds() // tf_secs)
     return {
         "entry_ts": t.entry_ts.isoformat(),
         "exit_ts": t.exit_ts.isoformat(),
@@ -72,19 +92,27 @@ def _trade_row(t: Trade) -> dict[str, Any]:
     }
 
 
-def write_trades(path: Path, portfolio: Portfolio) -> None:
+def write_trades(
+    path: Path,
+    portfolio: Portfolio,
+    *,
+    timeframe: str = "1h",
+) -> None:
     """Write `portfolio.closed_trades` to CSV at `path`.
 
     Columns: entry_ts, exit_ts, side, entry_price, exit_price, qty,
     pnl_usd, pnl_pct, bars_held. Always writes the header, even when the
-    trade list is empty. `bars_held` assumes a 1h timeframe.
+    trade list is empty. ``bars_held`` is computed as the floor of the
+    wall-clock gap (entry → exit) divided by the timeframe in seconds, so
+    a 15m run no longer undercounts 4×.
     """
+    tf_secs = _tf_seconds(timeframe)
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as fh:
         writer = csv.DictWriter(fh, fieldnames=_TRADE_HEADER)
         writer.writeheader()
         for t in portfolio.closed_trades:
-            writer.writerow(_trade_row(t))
+            writer.writerow(_trade_row(t, tf_secs))
 
 
 # ── equity CSV ────────────────────────────────────────────────────────────

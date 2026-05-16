@@ -1,8 +1,8 @@
 run:
-  assets: [BTC/USDT, ETH/USDT, SOL/USDT]
-  timeframe: 1h
-  start: 2025-04-01
-  end:   2025-04-21
+  assets: [BTC/USDT]
+  timeframe: 15m
+  start: 2025-04-10
+  end:   2025-04-15
   initial_balance: 10000
 
 execution:
@@ -25,17 +25,17 @@ llm:
   mock: false
   image_window_bars: 60
   agents:
-    technical: { model: anthropic/claude-3.5-sonnet, temperature: 0 }
-    visual:    { model: anthropic/claude-3.5-sonnet, temperature: 0, chart_window: 100 }
-    qabba:     { model: anthropic/claude-3.5-sonnet, temperature: 0, lookback: 50 }
-    decision:  { model: anthropic/claude-3.5-sonnet, temperature: 0 }
+    technical: { model: anthropic/claude-haiku-4.5, temperature: 0 }
+    visual:    { model: anthropic/claude-haiku-4.5, temperature: 0, chart_window: 100 }
+    qabba:     { model: anthropic/claude-haiku-4.5, temperature: 0, lookback: 50 }
+    decision:  { model: anthropic/claude-haiku-4.5, temperature: 0 }
   consensus_weights: { qabba: 0.40, visual: 0.35, technical: 0.25 }
-  consensus_threshold: 0.50
+  consensus_threshold: 0.35
   expected_output_tokens: 300
   pricing:
-    anthropic/claude-3.5-sonnet:
-      in_per_1m: 3.00
-      out_per_1m: 15.00
+    anthropic/claude-haiku-4.5:
+      in_per_1m: 1.00
+      out_per_1m: 5.00
 
 data:
   source: binance

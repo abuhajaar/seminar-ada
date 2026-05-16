@@ -127,8 +127,8 @@ async def run(
         if run_dir is not None and trad_port is not None and llm_port is not None:
             asset_dir = run_dir / _safe_symbol(symbol)
             asset_dir.mkdir(parents=True, exist_ok=True)
-            persistence.write_trades(asset_dir / "trad_trades.csv", trad_port)
-            persistence.write_trades(asset_dir / "llm_trades.csv", llm_port)
+            persistence.write_trades(asset_dir / "trad_trades.csv", trad_port, timeframe=timeframe)
+            persistence.write_trades(asset_dir / "llm_trades.csv", llm_port, timeframe=timeframe)
             persistence.write_equity(asset_dir / "trad_equity.csv", trad_port)
             persistence.write_equity(asset_dir / "llm_equity.csv", llm_port)
             metrics_by_asset_for_summary[symbol] = {

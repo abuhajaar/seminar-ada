@@ -22,7 +22,7 @@ from collections.abc import Iterable
 
 import numpy as np
 
-from core.broker import Broker
+from core.broker import Broker, _fee
 from core.engine_sync import size_position
 from core.metrics import MetricsDict, compute_metrics, drawdown_series
 from core.portfolio import Portfolio
@@ -48,13 +48,42 @@ def _win_pct(trades: list[Trade]) -> float:
 
 
 def _rolling_mdd_pct(curve: list[float]) -> float:
-    """Most-negative drawdown over the (bounded) equity curve, in percent."""
+    """Most-negative drawdown over the (bounded) equity curve, in percent.
+
+    Retained for back-compat with any external callers; the engine no
+    longer uses this on its own truncated curve (see `_update_running_mdd`).
+    """
     if not curve:
         return 0.0
     dd = drawdown_series(np.asarray(curve, dtype=float))
     if dd.size == 0:
         return 0.0
     return min(float(dd.min()), 0.0)
+
+
+def _update_running_mdd(
+    equity: float,
+    peak: float | None,
+    mdd: float,
+) -> tuple[float, float]:
+    """Incrementally update (max-drawdown-pct, running-peak) given a new equity.
+
+    Returns ``(new_mdd, new_peak)``. ``mdd`` is non-positive and expressed
+    as a percent (e.g. ``-4.2`` for −4.2%). When ``peak`` is ``None`` the
+    first equity sample becomes the peak and ``mdd`` stays unchanged.
+
+    Audit fix H6: by carrying ``peak`` across bars, MDD is correct
+    regardless of any UI-side curve truncation. The engine retains only
+    two extra scalars per leg.
+    """
+    if peak is None or equity > peak:
+        return mdd, equity
+    if peak == 0.0:
+        return mdd, peak
+    dd_pct = (equity / peak - 1.0) * 100.0
+    if dd_pct < mdd:
+        mdd = dd_pct
+    return mdd, peak
 
 
 def _queue_from_signal(
@@ -66,6 +95,8 @@ def _queue_from_signal(
     symbol: str,
     risk_pct: float,
     ctx_equity: float,
+    taker_fee_bps: float,
+    slippage_bps: float,
 ) -> None:
     """Apply the same close-vs-open + sizing logic as engine_sync.run_sync."""
     if signal.action is Action.HOLD:
@@ -83,9 +114,22 @@ def _queue_from_signal(
     # Opening trade.
     if signal.stop_loss is None:
         return
+    # Reject wrong-sided stops (audit H4): a long needs stop below entry; a
+    # short needs stop above. Otherwise `size_position` uses abs() and
+    # produces a position that gets stopped out on the next bar at a
+    # guaranteed loss far exceeding `risk_pct`.
+    wrong_side = (
+        (signal.action is Action.BUY and signal.stop_loss >= bar.close)
+        or (signal.action is Action.SELL and signal.stop_loss <= bar.close)
+    )
+    if wrong_side:
+        return
     qty = size_position(
         equity=ctx_equity, risk_pct=risk_pct,
         entry=bar.close, stop=signal.stop_loss,
+        action=signal.action,
+        taker_fee_bps=taker_fee_bps,
+        slippage_bps=slippage_bps,
     )
     if qty > 0.0:
         broker.queue(Order(
@@ -120,9 +164,17 @@ async def run_async(
         slippage_bps=slippage_bps,
     )
     bar_count = 0
+    last_bar: Bar | None = None
+    # Running per-leg state for H6: incrementally maintained so MDD stays
+    # correct even after `RunState.trad_curve`/`llm_curve` get truncated.
+    trad_peak: float | None = None
+    llm_peak: float | None = None
+    trad_mdd_pct = 0.0
+    llm_mdd_pct = 0.0
 
     for bar in bars:
         bar_count += 1
+        last_bar = bar
         # 1. Stops first, per leg.
         broker_trad.check_stops(bar)
         broker_llm.check_stops(bar)
@@ -155,11 +207,13 @@ async def run_async(
             broker=broker_trad, portfolio=portfolio_trad, signal=sig_trad,
             bar=bar, symbol=symbol, risk_pct=risk_pct,
             ctx_equity=ctx_trad.equity,
+            taker_fee_bps=taker_fee_bps, slippage_bps=slippage_bps,
         )
         _queue_from_signal(
             broker=broker_llm, portfolio=portfolio_llm, signal=sig_llm,
             bar=bar, symbol=symbol, risk_pct=risk_pct,
             ctx_equity=ctx_llm.equity,
+            taker_fee_bps=taker_fee_bps, slippage_bps=slippage_bps,
         )
 
         # 6. Mark equity per leg.
@@ -170,6 +224,14 @@ async def run_async(
         if run_state is not None:
             trad_eq = portfolio_trad.equity(bar.close)
             llm_eq = portfolio_llm.equity(bar.close)
+            # H6: update running peak/MDD before any curve truncation so the
+            # reported drawdown reflects the full run, not the last 500 pts.
+            trad_mdd_pct, trad_peak = _update_running_mdd(
+                trad_eq, trad_peak, trad_mdd_pct,
+            )
+            llm_mdd_pct, llm_peak = _update_running_mdd(
+                llm_eq, llm_peak, llm_mdd_pct,
+            )
             run_state.current_bar = bar_count
             run_state.bar_ts = bar.timestamp
             run_state.bar_close = bar.close
@@ -190,11 +252,44 @@ async def run_async(
                 run_state.llm_reasoning.append(sig_llm.reasoning)
             run_state.trad_win_pct = _win_pct(portfolio_trad.closed_trades)
             run_state.llm_win_pct = _win_pct(portfolio_llm.closed_trades)
-            run_state.trad_mdd = _rolling_mdd_pct(run_state.trad_curve)
-            run_state.llm_mdd = _rolling_mdd_pct(run_state.llm_curve)
+            run_state.trad_mdd = trad_mdd_pct
+            run_state.llm_mdd = llm_mdd_pct
 
     if bar_count < 2:
         raise ValueError("need at least 2 bars to compute metrics")
+
+    # End-of-run flatten per leg: any dangling position is synth-closed at the
+    # last bar's close so each portfolio's `closed_trades` is the complete
+    # record of positions taken. Mirrors `engine_sync.run_sync`; required so
+    # Σ trade.pnl == equity[-1] - equity[0] (see C1 in audit).
+    if last_bar is not None:
+        for portfolio in (portfolio_trad, portfolio_llm):
+            if portfolio.position is None:
+                continue
+            exit_price = last_bar.close
+            exit_fee = _fee(exit_price * portfolio.position.quantity, taker_fee_bps)
+            portfolio.close_position(
+                price=exit_price, fee=exit_fee, timestamp=last_bar.timestamp,
+            )
+        # Reflect post-flatten state in RunState so the UI's final snapshot
+        # agrees with the persisted summary (trade counts, equity, win pct).
+        if run_state is not None:
+            final_trad_eq = portfolio_trad.equity(last_bar.close)
+            final_llm_eq = portfolio_llm.equity(last_bar.close)
+            trad_mdd_pct, trad_peak = _update_running_mdd(
+                final_trad_eq, trad_peak, trad_mdd_pct,
+            )
+            llm_mdd_pct, llm_peak = _update_running_mdd(
+                final_llm_eq, llm_peak, llm_mdd_pct,
+            )
+            run_state.trad_equity = final_trad_eq
+            run_state.llm_equity = final_llm_eq
+            run_state.trad_trades = len(portfolio_trad.closed_trades)
+            run_state.llm_trades = len(portfolio_llm.closed_trades)
+            run_state.trad_win_pct = _win_pct(portfolio_trad.closed_trades)
+            run_state.llm_win_pct = _win_pct(portfolio_llm.closed_trades)
+            run_state.trad_mdd = trad_mdd_pct
+            run_state.llm_mdd = llm_mdd_pct
 
     metrics_trad = compute_metrics(
         equity_curve=portfolio_trad.equity_curve(),

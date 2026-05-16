@@ -192,6 +192,81 @@ async def test_engine_curve_caps_at_500():
     assert run_state.current_bar == 600
 
 
+async def test_engine_mdd_tracks_full_run_despite_curve_cap():
+    """`RunState.trad_mdd`/`llm_mdd` must reflect peak-to-trough over the
+    entire run, not just the truncated 500-point trailing window.
+
+    Regression for audit finding H6: previously the engine recomputed MDD
+    from `run_state.trad_curve[:500]` each bar, which silently dropped the
+    earliest equity highs/lows once the run exceeded 500 bars.
+
+    Test design: feed equities directly via the engine's internal MDD
+    tracker (running peak + min drawdown) and verify it matches the MDD
+    computed offline on the full curve, *especially when* the global peak
+    lives in the truncated prefix.
+    """
+    import numpy as np
+
+    from core.engine import _update_running_mdd
+    from core.metrics import drawdown_series
+
+    # Hand-crafted equity sequence: an early peak at index 0, then a slow
+    # decline. The peak (10_000) would be evicted by any trailing-window
+    # truncation, so the old `_rolling_mdd_pct(curve[:500])` would
+    # under-report MDD once index 0 fell off the window.
+    full = [10_000.0]
+    for _ in range(1, 800):
+        full.append(full[-1] - 1.0)  # monotonic decline
+
+    expected_mdd = float(drawdown_series(np.asarray(full, dtype=float)).min())
+
+    # Engine-style incremental update: state is just (peak, mdd).
+    peak: float | None = None
+    mdd = 0.0
+    for eq in full:
+        mdd, peak = _update_running_mdd(eq, peak, mdd)
+
+    assert mdd == pytest.approx(expected_mdd, abs=1e-8)
+    # And it must agree with the full-curve drawdown_series even though we
+    # never retained more than O(1) state.
+    assert mdd < -7.0  # sanity: an 800-bar slide from 10k must give big MDD
+
+
+async def test_engine_run_state_mdd_matches_full_curve():
+    """End-to-end: `RunState.trad_mdd` after a 600-bar run equals the MDD
+    computed from the *full* portfolio equity curve, not the truncated
+    last-500-points view.
+    """
+    import numpy as np
+
+    from core.metrics import drawdown_series
+
+    bars = _make_bars(600, seed=42)
+    run_state = RunState(symbol="TEST", timeframe="1h", total_bars=600)
+    portfolio_trad, portfolio_llm, _, _ = await run_async(
+        bars=bars,
+        trad_strategy=TraditionalStrategy(),
+        llm_strategy=TraditionalStrategy(),
+        symbol=SYMBOL, initial_balance=INITIAL_BALANCE,
+        taker_fee_bps=TAKER_FEE_BPS, slippage_bps=SLIPPAGE_BPS,
+        risk_pct=RISK_PCT,
+        run_state=run_state,
+    )
+
+    full_trad = np.asarray(
+        [eq for _, eq in portfolio_trad.equity_curve()], dtype=float,
+    )
+    full_llm = np.asarray(
+        [eq for _, eq in portfolio_llm.equity_curve()], dtype=float,
+    )
+    expected_trad_mdd = min(float(drawdown_series(full_trad).min()), 0.0)
+    expected_llm_mdd = min(float(drawdown_series(full_llm).min()), 0.0)
+
+    assert len(run_state.trad_curve) == 500  # cap still in effect
+    assert run_state.trad_mdd == pytest.approx(expected_trad_mdd, abs=1e-8)
+    assert run_state.llm_mdd == pytest.approx(expected_llm_mdd, abs=1e-8)
+
+
 def test_engine_requires_two_bars():
     """Feeding a single bar must raise ValueError (matches engine_sync behavior)."""
     bars = _make_bars(n=1)
