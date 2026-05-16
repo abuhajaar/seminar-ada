@@ -230,6 +230,8 @@ def run(
             client=client,
             model=llm_model,
             image_window_bars=cfg.llm.image_window_bars,
+            consensus_weights=cfg.llm.consensus_weights,
+            consensus_threshold=cfg.llm.consensus_threshold,
         )
         return trad, llm
 

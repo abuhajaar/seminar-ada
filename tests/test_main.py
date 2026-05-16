@@ -109,11 +109,11 @@ def test_main_non_mock_wires_budget_guard(
     """Patch OpenRouterClient at the main import site so the non-mock branch
     runs without network. Assert the run completes and budget tracking
     actually happened (i.e. BudgetGuardedClient is wired in and charging)."""
-    # The LLM strategy short-circuits to HOLD during a 30-bar warmup, so the
-    # 5-bar fixture would never trigger a guard charge. Synthesize 35 bars.
+    # The LLM strategy short-circuits to HOLD during a 60-bar warmup, so the
+    # 5-bar fixture would never trigger a guard charge. Synthesize 65 bars.
     base_ts = datetime(2025, 4, 1, tzinfo=UTC)
     synth_bars: list[Bar] = []
-    for i in range(35):
+    for i in range(65):
         price = 100.0 + 0.5 * i
         synth_bars.append(
             Bar(

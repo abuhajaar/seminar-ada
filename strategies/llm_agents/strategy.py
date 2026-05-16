@@ -13,6 +13,7 @@ unit tests that only want to verify the strategy wires up and returns a Signal.
 """
 from __future__ import annotations
 
+import math
 from collections import deque
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
@@ -20,7 +21,7 @@ from typing import TYPE_CHECKING
 import pandas as pd
 
 from core.types import Action, Bar, Signal
-from indicators.ta import ema, macd, rsi
+from indicators.ta import adx, ema, macd, rsi, supertrend
 from llm.client import LLMClient
 from strategies.base import Context
 from strategies.llm_agents.chart import render_chart
@@ -29,9 +30,13 @@ from strategies.llm_agents.graph import build_graph
 if TYPE_CHECKING:
     from langgraph.graph.state import CompiledStateGraph
 
-# Enough bars for EMA26 + MACD-slow warmup; matches TraditionalStrategy's
-# minimum-confidence floor at 30 (we don't need the SuperTrend depth here).
-WARMUP_BARS: int = 30
+# Enough bars to guarantee every indicator value is finite before invoking
+# the graph. MACD(12,26,9).hist first non-NaN at original index 25+8=33
+# (1-indexed bar 34), and SuperTrend(10,3) needs ~10 bars of ATR seasoning.
+# 60 picks a comfortable ceiling that also matches TraditionalStrategy's
+# warmup floor (audit H2). Pre-fix value was 30, which produced
+# ``macd_hist=nan`` in the technical analyst prompt.
+WARMUP_BARS: int = 60
 
 
 @dataclass
@@ -57,6 +62,8 @@ class LLMAgentStrategy:
     ema_fast_n: int = 12
     ema_slow_n: int = 26
     rsi_n: int = 14
+    consensus_weights: dict[str, float] | None = None
+    consensus_threshold: float | None = None
 
     _bars: deque[Bar] = field(default_factory=deque, init=False, repr=False)
     _graph: CompiledStateGraph | None = field(default=None, init=False, repr=False)
@@ -65,7 +72,11 @@ class LLMAgentStrategy:
         # Build the compiled graph once. `client` is captured per-node via
         # `functools.partial` inside `build_graph`, so subsequent invocations
         # are I/O-free at graph-build time.
-        self._graph = build_graph(client=self.client)
+        self._graph = build_graph(
+            client=self.client,
+            consensus_weights=self.consensus_weights,
+            consensus_threshold=self.consensus_threshold,
+        )
 
     async def on_bar(self, bar: Bar, ctx: Context) -> Signal:  # noqa: ARG002 (ctx reserved for future use)
         self._bars.append(bar)
@@ -79,6 +90,8 @@ class LLMAgentStrategy:
 
         # Indicator features (latest values only — analyst prompts read scalars).
         closes = pd.Series([b.close for b in self._bars], dtype=float)
+        highs = pd.Series([b.high for b in self._bars], dtype=float)
+        lows = pd.Series([b.low for b in self._bars], dtype=float)
         ema_fast_v = float(ema(closes, length=self.ema_fast_n).iloc[-1])
         ema_slow_v = float(ema(closes, length=self.ema_slow_n).iloc[-1])
         rsi_v = float(rsi(closes, length=self.rsi_n).iloc[-1])
@@ -88,15 +101,45 @@ class LLMAgentStrategy:
         # `ema_slow_n` into MACD and breaking spec-equivalence with TraditionalStrategy.
         macd_df = macd(closes, fast=12, slow=26, signal=9)
         macd_h = float(macd_df["hist"].iloc[-1])
+        # ADX(14) — the regime filter. ``TraditionalStrategy`` uses it to skip
+        # chop (ADX <= 20); the LLM technical prompt advertises this key (see
+        # `prompts.py:36`) so we must actually supply it (audit H1).
+        adx_v = float(adx(highs, lows, closes, length=14).iloc[-1])
+
+        # SuperTrend(10, 3) — same parameters as `TraditionalStrategy` so the
+        # LLM bot's stop placement and risk-sized position notional are directly
+        # comparable in the seminar demo. The line itself is the stop level;
+        # `dir` is unused here because the LLM consensus replaces the regime
+        # filter that traditional uses `dir` for.
+        st_df = supertrend(highs, lows, closes, length=10, multiplier=3.0)
+        st_line_raw = st_df["st"].iloc[-1]
+        st_line: float | None = (
+            float(st_line_raw) if not pd.isna(st_line_raw) else None
+        )
 
         features: dict[str, float] = {
             "ema_fast": ema_fast_v,
             "ema_slow": ema_slow_v,
             "rsi": rsi_v,
             "macd_hist": macd_h,
+            "adx": adx_v,
             "cvd": float(bar.cvd),
             "cvd_delta": float(bar.cvd_delta),
         }
+
+        # Defensive NaN guard: a pathological bar sequence (e.g. perfectly flat
+        # closes ⇒ RSI 0/0) can still yield NaN even past warmup. ``_fmt`` in
+        # prompts.py renders NaN as the literal string ``"nan"``, which then
+        # leaks into the technical analyst prompt and degrades model output.
+        # Short-circuit to HOLD instead of invoking the graph (audit H3).
+        nan_keys = [k for k, v in features.items() if not math.isfinite(v)]
+        if nan_keys:
+            return Signal(
+                action=Action.HOLD,
+                confidence=0.0,
+                reasoning=f"indicator nan: {','.join(nan_keys)}",
+                stop_loss=None,
+            )
 
         image_b64: str | None = None
         if self.render_image:
@@ -122,9 +165,15 @@ class LLMAgentStrategy:
         # only to satisfy the dataclass field default. Hence the union-attr ignore.
         final = await self._graph.ainvoke(initial)  # type: ignore[union-attr]
         d = final["decision"]
+        # Only emit a stop on directional signals — HOLD does not open a
+        # position, so `stop_loss` is meaningless there. `core/engine.py`
+        # gates `_open_long/_open_short` on `signal.stop_loss is not None`,
+        # so without this the bot can never enter (historical bug: zero LLM
+        # trades across every run prior to this fix).
+        stop_loss = st_line if d.action in (Action.BUY, Action.SELL) else None
         return Signal(
             action=d.action,
             confidence=d.confidence,
             reasoning=d.rationale,
-            stop_loss=None,
+            stop_loss=stop_loss,
         )
