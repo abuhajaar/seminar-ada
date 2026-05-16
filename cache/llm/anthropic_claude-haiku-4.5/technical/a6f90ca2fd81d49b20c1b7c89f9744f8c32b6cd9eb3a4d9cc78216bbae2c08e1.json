@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.62 Fast EMA slightly above slow EMA with weak RSI (41) and negative MACD histogram suggest consolidation; low ADX (16.9) indicates insufficient trend strength for confident directional trade.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 53
+}

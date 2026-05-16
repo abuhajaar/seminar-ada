@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.75 Strong downtrend with lower highs and lows, accelerating selling pressure in final hours, and elevated volume on red candles indicating capitulation.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 41
+}

@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.62 RSI below 40 suggests oversold conditions with potential bounce, but negative MACD histogram and weak ADX (21.7) indicate insufficient trend strength to commit to a directional trade.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 51
+}

@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Price has formed a lower high after rejecting the 85500 resistance level, with declining volume on the recent rally suggesting weakening bullish momentum and increased downside risk.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 46
+}

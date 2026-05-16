@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Price has formed a lower high around 84,800 after rejecting the 85,000 level multiple times, with a sharp recent decline to 83,200 on elevated volume suggesting weakening momentum and potential downtrend continuation.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 60
+}

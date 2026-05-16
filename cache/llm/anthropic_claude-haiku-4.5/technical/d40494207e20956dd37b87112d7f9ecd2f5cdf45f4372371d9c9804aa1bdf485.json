@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 RSI below 40 indicates oversold conditions with bearish momentum confirmed by negative MACD histogram and ADX above 30 showing strong downtrend, though fast EMA near slow EMA suggests weakening momentum.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 57
+}

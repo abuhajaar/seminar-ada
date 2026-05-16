@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Price has broken below key support levels with a series of lower lows and lower highs, forming a clear downtrend; recent consolidation near 84,500 shows weakness with declining volume, suggesting further downside is likely.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 58
+}

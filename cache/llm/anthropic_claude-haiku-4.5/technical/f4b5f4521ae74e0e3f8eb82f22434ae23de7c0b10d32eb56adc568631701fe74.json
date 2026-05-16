@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.62 RSI near midpoint (49.3) suggests equilibrium, but positive MACD histogram and weak ADX (17.7) indicate insufficient trend strength for a confident directional trade.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 50
+}

@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 RATIONALE: Price has formed a lower high after reaching 85750, with a strong bearish red candle at the end and elevated volume spike suggesting distribution; resistance established around 85500 with failure to break higher indicating weakening momentum.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 61
+}

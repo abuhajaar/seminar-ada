@@ -1,0 +1,6 @@
+{
+  "content": "BUY 0.62 Positive cumulative volume delta of 1580.43524 indicates sustained buying pressure despite minor recent delta weakness, suggesting bullish accumulation.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 96,
+  "output_tokens": 41
+}

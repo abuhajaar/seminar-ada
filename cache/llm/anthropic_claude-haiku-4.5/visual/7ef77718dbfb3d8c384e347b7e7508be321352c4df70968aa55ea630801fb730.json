@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.55 Price is consolidating near support after a downtrend from the April 11 peak, showing mixed signals with recent modest recovery but lacking clear directional conviction.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 43
+}

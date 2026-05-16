@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.42 RSI near midpoint (42) with bearish MACD histogram and weak ADX (13.4) suggest insufficient directional conviction; fast EMA below slow EMA confirms downward bias but lack of momentum strength warrants caution.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 61
+}

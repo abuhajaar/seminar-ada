@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.55 Price is consolidating in a narrow range (84,500-85,000) after an initial rally, with declining volume suggesting lack of conviction; wait for a breakout above 85,200 or below 84,500 for clearer directional bias.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 65
+}

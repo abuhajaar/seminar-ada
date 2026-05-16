@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.55 Price is consolidating near resistance around 84000 with mixed signals\u2014recent indecision candles and declining volume suggest waiting for a breakout confirmation before committing to a directional trade.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 50
+}

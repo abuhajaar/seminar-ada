@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 RSI deeply oversold at 35.4 with bearish MACD histogram and fast EMA below slow EMA, though weak ADX limits conviction.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 44
+}

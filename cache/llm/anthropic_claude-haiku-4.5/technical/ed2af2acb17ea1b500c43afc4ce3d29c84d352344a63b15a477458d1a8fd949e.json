@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.62 Fast EMA below slow EMA with RSI in overbought territory (63) and weak trend strength (ADX 17.8) suggest consolidation rather than directional conviction.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 49
+}

@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.65 Fast EMA below slow EMA with moderately elevated RSI (63.3) and strong ADX (31.7) suggest uptrend momentum is present but potentially overbought, warranting caution before entry.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 57
+}

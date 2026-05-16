@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.62 Fast EMA below slow EMA with neutral RSI suggests consolidation; weak ADX indicates insufficient trend strength for directional conviction.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 37
+}

@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Recent breakdown below 84,000 support with increased volume and lower highs suggest downward momentum; price failed to sustain the 85,000 resistance level and is now testing lower support levels.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 52
+}

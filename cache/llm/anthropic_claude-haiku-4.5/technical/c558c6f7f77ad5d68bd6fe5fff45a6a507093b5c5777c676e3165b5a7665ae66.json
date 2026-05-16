@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.62 Fast EMA below slow EMA with neutral RSI (49.6) and weak trend strength (ADX 21.7) suggest consolidation, though positive MACD histogram indicates emerging upside momentum.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 54
+}

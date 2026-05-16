@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.62 Fast EMA below slow EMA with weak RSI (41.8) suggests downward pressure, but positive MACD histogram and low ADX (20.5) indicate insufficient trend strength to commit to a directional trade.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 58
+}

@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 RSI overbought at 73.81 with positive MACD histogram suggests momentum may reverse; strong ADX (44.19) confirms trend strength but overbought conditions warrant caution.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 52
+}

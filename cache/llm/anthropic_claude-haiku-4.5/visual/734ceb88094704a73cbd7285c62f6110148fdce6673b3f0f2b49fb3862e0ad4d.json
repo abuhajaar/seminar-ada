@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.55 Price has recovered from the 79000 support level and is consolidating around 80000, but lacks clear directional momentum and volume confirmation to justify a strong directional trade.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 47
+}

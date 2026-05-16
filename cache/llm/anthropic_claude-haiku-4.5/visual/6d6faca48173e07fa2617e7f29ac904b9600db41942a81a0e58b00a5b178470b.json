@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.65 Price is consolidating near resistance around 84000 with mixed signals\u2014recent pullback after spike suggests caution, while overall uptrend remains intact but lacks clear directional conviction.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 48
+}

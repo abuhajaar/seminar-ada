@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Negative CVD of -403.31 with accelerating delta of -211.75 indicates sustained selling pressure and deteriorating order flow momentum.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 94,
+  "output_tokens": 41
+}

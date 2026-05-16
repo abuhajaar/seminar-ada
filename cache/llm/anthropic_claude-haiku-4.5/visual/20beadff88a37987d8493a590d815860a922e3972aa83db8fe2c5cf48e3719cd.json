@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Price has formed a lower high pattern after rejecting the 84000 resistance level, with declining volume and a series of red candles indicating weakening momentum and potential downtrend continuation.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 49
+}

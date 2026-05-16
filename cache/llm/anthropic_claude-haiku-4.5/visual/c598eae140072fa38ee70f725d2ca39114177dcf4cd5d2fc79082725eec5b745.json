@@ -1,0 +1,6 @@
+{
+  "content": "BUY 0.72 RATIONALE: Price has formed a higher low pattern with recent consolidation near 85,000, showing bullish structure after the April 14 spike; volume remains moderate and the last two candles close near their highs, suggesting renewed upward momentum.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 65
+}

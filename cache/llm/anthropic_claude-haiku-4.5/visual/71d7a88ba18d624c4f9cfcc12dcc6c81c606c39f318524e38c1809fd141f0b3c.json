@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.55 Price is consolidating near recent highs (83,800) after a spike, with mixed candlestick signals and moderate volume suggesting indecision between buyers and sellers.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 46
+}

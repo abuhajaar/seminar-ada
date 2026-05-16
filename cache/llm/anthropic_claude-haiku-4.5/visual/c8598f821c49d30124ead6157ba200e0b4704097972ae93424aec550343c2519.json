@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.55 Price is consolidating near support after a sharp decline from the 85500 peak, with mixed signals between the recovery attempt and weakening volume suggesting uncertainty about the next directional move.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 48
+}

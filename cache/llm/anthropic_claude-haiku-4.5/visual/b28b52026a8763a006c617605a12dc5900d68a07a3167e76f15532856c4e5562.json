@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 RATIONALE: Price has formed a lower high after reaching 85500, with recent candles showing rejection and closing near session lows; volume spike on the decline and bearish engulfing pattern suggest weakening momentum and potential downside continuation.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 61
+}

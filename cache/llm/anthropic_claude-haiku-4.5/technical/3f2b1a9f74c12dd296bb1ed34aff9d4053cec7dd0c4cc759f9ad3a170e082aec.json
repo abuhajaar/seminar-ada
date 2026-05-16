@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.62 EMA crossover signals are weak with fast EMA below slow EMA, RSI near midpoint (44.88) shows no clear directional bias, and negative MACD histogram suggests bearish momentum, but ADX (25.31) indicates moderate trend strength requiring confirmation before committing to a directional trade.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 77
+}

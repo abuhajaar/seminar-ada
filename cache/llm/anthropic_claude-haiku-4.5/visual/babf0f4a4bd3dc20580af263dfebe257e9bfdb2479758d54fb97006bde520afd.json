@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.65 Price is consolidating near resistance after a strong rally, with volume declining and mixed candlestick signals suggesting uncertainty before the next directional move.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 40
+}

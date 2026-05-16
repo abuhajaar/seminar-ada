@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.62 EMA crossover signals are weak with fast EMA below slow EMA and RSI in neutral territory (44.8), while negative MACD histogram and low ADX (18.2) indicate insufficient trend strength for a confident directional trade.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 62
+}

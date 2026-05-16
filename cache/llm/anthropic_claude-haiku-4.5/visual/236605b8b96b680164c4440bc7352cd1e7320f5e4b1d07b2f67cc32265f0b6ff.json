@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.65 Price has reached a local peak around 83000 with recent rejection and consolidation, showing weakening momentum and indecision before committing to a directional move.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 45
+}

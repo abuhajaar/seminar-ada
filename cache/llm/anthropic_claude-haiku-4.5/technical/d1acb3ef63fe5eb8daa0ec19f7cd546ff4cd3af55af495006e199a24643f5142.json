@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 RSI at 77.1 indicates overbought conditions; despite positive MACD histogram, the combination of elevated ADX (34.6) and diverging EMAs suggests momentum may reverse soon.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 53
+}

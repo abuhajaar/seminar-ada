@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.65 Fast EMA above slow EMA suggests uptrend, but RSI near overbought (64) combined with negative MACD histogram indicates weakening momentum requiring confirmation before entry.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 48
+}

@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.62 Fast EMA above slow EMA suggests upward momentum, but negative MACD histogram, neutral RSI at midpoint, and strong ADX indicate consolidation with mixed directional signals requiring confirmation before committing.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 54
+}

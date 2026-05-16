@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Long-term downtrend from April 11 peak (84000) to current levels (83000), with lower highs and lower lows; recent consolidation near support shows weakening momentum and declining volume, suggesting further downside risk.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 61
+}

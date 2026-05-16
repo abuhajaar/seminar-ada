@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.42 EMA crossover signals are weak with minimal separation, RSI near neutral midpoint, and low ADX indicates insufficient trend strength to commit to a directional trade.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 44
+}

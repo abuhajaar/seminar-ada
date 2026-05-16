@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.55 Price is consolidating in a narrow range (84,500-86,000) with mixed signals\u2014uptrend structure intact but recent rejection at highs and declining volume suggest caution before committing to directional trades.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 56
+}

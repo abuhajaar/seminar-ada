@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Price has reached a local peak around 83000 with a bearish engulfing pattern and declining volume, suggesting potential pullback or reversal after the strong uptrend.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 47
+}

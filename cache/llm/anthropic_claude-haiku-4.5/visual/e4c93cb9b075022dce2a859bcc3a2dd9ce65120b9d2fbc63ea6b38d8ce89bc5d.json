@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.65 Price is consolidating near resistance after a strong rally, with declining volume suggesting momentum exhaustion; wait for breakout confirmation or pullback support test before committing.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 43
+}

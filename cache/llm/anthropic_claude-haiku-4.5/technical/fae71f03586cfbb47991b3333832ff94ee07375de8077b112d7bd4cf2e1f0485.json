@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.42 RSI near midpoint (45.6) and weak ADX (10.0) suggest indecision, while negative MACD histogram and slow EMA above fast EMA indicate slight bearish pressure but insufficient conviction for a directional trade.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 62
+}

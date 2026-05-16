@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.65 Price has reached a local high near 86000 with declining volume and mixed candlestick signals, suggesting consolidation before the next directional move.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 42
+}

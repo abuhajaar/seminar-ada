@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Price has formed a lower high after reaching 85500 resistance, with declining volume on the pullback suggesting weakening momentum and potential reversal from the intraday peak.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 46
+}

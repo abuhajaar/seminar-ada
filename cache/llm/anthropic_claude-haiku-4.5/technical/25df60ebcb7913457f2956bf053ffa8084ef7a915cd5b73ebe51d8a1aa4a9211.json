@@ -1,0 +1,6 @@
+{
+  "content": "BUY 0.62 Fast EMA above slow EMA with RSI in bullish zone (61), though negative MACD histogram and moderate ADX suggest caution on momentum strength.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 112,
+  "output_tokens": 45
+}

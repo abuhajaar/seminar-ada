@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.62 EMA crossover signals are weak with fast EMA below slow EMA and RSI in neutral territory (43.49), while negative MACD histogram and moderate ADX (22.74) suggest indecision without clear directional momentum.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 61
+}

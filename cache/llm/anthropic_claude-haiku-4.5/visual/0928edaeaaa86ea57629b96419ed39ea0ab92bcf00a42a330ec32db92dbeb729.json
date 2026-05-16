@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.45 Price is in a prolonged downtrend with lower highs and lows, but recent consolidation near 84,500 with low volume suggests indecision; wait for a breakout above 85,000 or below 84,300 for clearer directional confirmation.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 70
+}

@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.45 RSI oversold conditions conflict with weak trend strength (low ADX), suggesting consolidation rather than a clear directional move.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 36
+}

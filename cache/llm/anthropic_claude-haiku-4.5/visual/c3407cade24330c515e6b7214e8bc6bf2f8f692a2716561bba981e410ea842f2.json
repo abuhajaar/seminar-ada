@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Price has broken below key support levels with a series of lower lows and lower highs, confirmed by declining volume on rallies, indicating weakening momentum and continued downside pressure.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 47
+}

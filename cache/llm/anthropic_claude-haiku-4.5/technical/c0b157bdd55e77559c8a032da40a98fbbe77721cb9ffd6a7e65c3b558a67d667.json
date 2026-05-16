@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.62 Fast EMA below slow EMA with positive MACD histogram suggests weakening momentum; RSI near midpoint and moderate ADX indicate indecision but downtrend structure favors sellers.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 50
+}

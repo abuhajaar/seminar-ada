@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.62 Fast EMA above slow EMA suggests upward momentum, but RSI near midpoint (53.2) and negative MACD histogram indicate weakening conviction; ADX (25.2) shows moderate trend strength without clear directional bias.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 61
+}

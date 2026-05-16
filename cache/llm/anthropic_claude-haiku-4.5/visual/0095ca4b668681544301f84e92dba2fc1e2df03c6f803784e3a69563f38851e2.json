@@ -1,0 +1,6 @@
+{
+  "content": "BUY 0.72 RATIONALE: Price has recovered from the 83,500 support level with higher lows and higher highs over the last 4 candles, forming a bullish ascending pattern with increasing volume on the latest green candle, suggesting upward momentum continuation.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 66
+}

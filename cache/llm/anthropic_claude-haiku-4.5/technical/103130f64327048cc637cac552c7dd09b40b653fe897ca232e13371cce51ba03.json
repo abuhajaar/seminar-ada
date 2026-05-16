@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.42 RSI near midpoint (46) lacks directional conviction, weak ADX (9.5) indicates low trend strength, and negative MACD histogram with converging EMAs suggest indecision.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 52
+}

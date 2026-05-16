@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Price has broken below key support levels with a series of lower highs and lower lows, declining from 86000 to 84500, accompanied by weakening volume, indicating bearish momentum continuation.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 52
+}

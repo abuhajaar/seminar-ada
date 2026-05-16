@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 RSI overbought at 73.2 signals potential pullback, though strong ADX (51.8) and positive MACD histogram suggest uptrend momentum remains intact, warranting caution rather than aggressive selling.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 58
+}

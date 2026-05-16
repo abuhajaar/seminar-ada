@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.65 EMA crossover signals are weak with fast EMA below slow EMA, RSI at 40 suggests neither overbought nor oversold conditions, but positive MACD histogram and moderate ADX (27.9) indicate some directional momentum without clear conviction.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 66
+}

@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.55 Price is consolidating near support after a downtrend, showing weak recovery attempts with low volume, suggesting indecision before the next directional move.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 41
+}

@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.42 Fast EMA slightly above slow EMA with neutral RSI (48.5) and weak trend strength (ADX 13.4), but negative MACD histogram suggests weakening momentum.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 50
+}

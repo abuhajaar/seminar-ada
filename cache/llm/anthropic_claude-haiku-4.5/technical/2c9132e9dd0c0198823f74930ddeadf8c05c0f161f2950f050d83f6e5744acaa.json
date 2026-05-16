@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.42 RSI near midpoint (52) with weak ADX (10.4) and negative MACD histogram suggest indecision; fast EMA slightly above slow EMA provides minimal bullish support but lacks conviction.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 55
+}

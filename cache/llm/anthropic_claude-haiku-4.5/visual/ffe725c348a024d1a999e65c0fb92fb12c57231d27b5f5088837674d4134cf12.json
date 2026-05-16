@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 RATIONALE: Price has formed a lower high pattern after rejecting the 84000 resistance level, with a series of lower highs and lower lows from 18:30 onwards, indicating weakening momentum and a bearish trend reversal from the earlier bullish impulse.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 70
+}

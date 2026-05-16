@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.55 Price is near recent highs with mixed candlestick signals\u2014recent candles show indecision with both bullish and bearish wicks, suggesting consolidation rather than a clear directional breakout.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 53
+}

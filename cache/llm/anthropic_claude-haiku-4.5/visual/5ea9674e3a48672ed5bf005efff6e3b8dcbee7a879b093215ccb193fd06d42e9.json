@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Price has formed a lower high pattern with declining volume after the initial spike, indicating weakening momentum and a likely continuation of the downtrend from the 84000 peak.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 46
+}

@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.55 Price is consolidating after a sharp initial rally and subsequent decline; currently attempting recovery near mid-range support with mixed volume signals and no clear directional conviction.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 42
+}

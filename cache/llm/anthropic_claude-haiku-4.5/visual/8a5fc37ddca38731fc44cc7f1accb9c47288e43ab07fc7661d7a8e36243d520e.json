@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Price has formed a descending channel with lower highs and lower lows, breaking below key support at 83,500 with declining volume confirmation, indicating continued downward momentum.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 47
+}

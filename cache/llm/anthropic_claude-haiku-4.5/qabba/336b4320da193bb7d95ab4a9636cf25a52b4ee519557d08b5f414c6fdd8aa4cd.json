@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.62 Negative CVD of -410.1494 indicates sustained selling pressure, though positive CVD delta of +18.49 suggests minor recent buying interest limiting downside conviction.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 95,
+  "output_tokens": 47
+}

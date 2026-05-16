@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.62 RSI near midpoint (45.7) suggests indecision, while positive MACD histogram and weak ADX (18.7) indicate insufficient trend strength for a confident directional trade.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 51
+}

@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.62 EMA crossover bullish but MACD histogram negative and RSI neutral suggest consolidation; ADX moderate strength indicates indecision.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 39
+}

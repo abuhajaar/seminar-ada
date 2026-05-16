@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.55 Price is consolidating near support after a downtrend from 84000, showing weak recovery attempts but lacking conviction to confirm a sustained reversal.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 40
+}

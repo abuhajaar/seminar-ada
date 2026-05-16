@@ -1,0 +1,6 @@
+{
+  "content": "BUY 0.62 RATIONALE: Price has recovered from mid-April lows (83000) to test 83500 resistance with higher lows and increasing volume on recent green candles, suggesting emerging uptrend momentum despite overall downtrend from April 11 peak.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 66
+}

@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.55 Price has recovered from intraday lows but remains below opening levels with declining volume, suggesting consolidation rather than a clear directional commitment.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 39
+}

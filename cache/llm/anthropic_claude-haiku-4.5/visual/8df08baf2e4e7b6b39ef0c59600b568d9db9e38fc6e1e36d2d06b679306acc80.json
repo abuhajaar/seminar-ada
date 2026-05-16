@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.55 Price is near recent highs with weakening momentum and mixed candlestick signals; volume spike at 13:45 suggests prior strength but current consolidation lacks clear directional conviction.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 49
+}

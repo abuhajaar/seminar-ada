@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.42 Fast EMA below slow EMA with weakening momentum (negative MACD histogram), but RSI near midpoint and low ADX suggest insufficient directional conviction to commit to either direction.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 49
+}

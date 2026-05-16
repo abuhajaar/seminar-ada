@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Strong bearish reversal from recent highs with a large red candle at session close, breaking below support levels and accompanied by elevated volume, indicating selling pressure.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 43
+}

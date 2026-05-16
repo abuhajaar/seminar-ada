@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Price has formed a lower high after reaching 85500 peak, with increased volume on recent red candles and a breakdown from the uptrend, signaling weakening momentum and potential reversal.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 51
+}

@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Recent price rejection at resistance (~86000) with lower high formation, declining volume on the latest candle, and bearish engulfing pattern suggesting downside continuation toward the 85500 support level.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 52
+}

@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Price has formed a lower high after reaching resistance near 83000, with increased volume on the recent red candle suggesting distribution and potential reversal from the uptrend.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 45
+}

@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Downtrend from 84000 peak with lower highs and lows, recent consolidation near 83000 showing weakness, and volume declining suggesting lack of buying conviction.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 48
+}

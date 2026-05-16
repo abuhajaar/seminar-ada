@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.55 Price has stabilized around 80000 after a sharp decline from 82000, showing consolidation with mixed volume signals and no clear directional breakout yet.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 44
+}

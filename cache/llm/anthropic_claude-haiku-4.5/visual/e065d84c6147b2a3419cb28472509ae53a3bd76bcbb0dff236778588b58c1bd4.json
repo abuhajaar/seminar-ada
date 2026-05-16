@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.65 Price has recovered from lows and is consolidating near resistance around 80,500, but lacks strong volume confirmation and shows indecision with mixed candlestick patterns; wait for a breakout with volume before committing.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 57
+}

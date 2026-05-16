@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Price has reached a local peak at 84000 with a bearish red candle and declining volume, suggesting weakening momentum and potential reversal downward.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 43
+}

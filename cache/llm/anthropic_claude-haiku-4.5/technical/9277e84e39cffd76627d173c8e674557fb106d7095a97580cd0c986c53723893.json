@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.62 RSI near midpoint (54.6) with weak ADX (16.9) suggests indecision; positive MACD histogram and fast EMA below slow EMA create conflicting signals warranting patience for clearer directional bias.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 61
+}

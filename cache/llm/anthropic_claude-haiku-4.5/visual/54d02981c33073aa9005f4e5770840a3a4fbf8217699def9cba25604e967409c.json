@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.65 Price is consolidating in a narrow range (84,500-85,000) after an initial rally, with declining volume suggesting indecision; await a breakout above the April 14 highs or below support before committing.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 59
+}

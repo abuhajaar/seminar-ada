@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Price has formed a lower high around 85,750 after rejecting the 86,000 resistance level, with volume declining into the breakdown and price now trading below key support levels, indicating weakening momentum and downside risk.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 58
+}

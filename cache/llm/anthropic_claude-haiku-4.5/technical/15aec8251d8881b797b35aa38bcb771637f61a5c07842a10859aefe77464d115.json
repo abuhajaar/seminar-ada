@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.62 Fast and slow EMAs are nearly aligned with weak momentum (RSI 44.4, negative MACD histogram), and ADX is too low (22.4) to confirm a strong directional trend.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 54
+}

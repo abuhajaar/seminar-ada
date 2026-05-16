@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Fast EMA below slow EMA with bearish crossover setup, RSI near midpoint showing weakness, and strong ADX (31.26) confirming downtrend momentum despite positive MACD histogram.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 54
+}

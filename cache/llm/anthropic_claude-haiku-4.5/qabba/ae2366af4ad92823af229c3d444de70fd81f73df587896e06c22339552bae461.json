@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.45 Positive cumulative volume delta suggests buying pressure, but the negative delta reading indicates recent momentum loss and potential exhaustion, creating conflicting signals.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 96,
+  "output_tokens": 39
+}

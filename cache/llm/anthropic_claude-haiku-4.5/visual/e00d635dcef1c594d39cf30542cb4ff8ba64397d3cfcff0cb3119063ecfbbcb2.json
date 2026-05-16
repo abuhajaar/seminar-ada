@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Price has formed a bearish reversal pattern at resistance (~83000) with lower highs and increased selling volume; recent red candles and failure to sustain gains suggest weakening momentum.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 49
+}

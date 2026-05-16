@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Lower highs and lower lows with a breakdown below 83,500 support, combined with declining volume on the recent bounce, suggests weakening momentum and further downside risk.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 47
+}

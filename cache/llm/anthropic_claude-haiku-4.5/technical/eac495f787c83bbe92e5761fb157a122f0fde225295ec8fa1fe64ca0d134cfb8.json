@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Fast EMA below slow EMA with RSI in oversold territory (38.5) and negative MACD histogram confirm downward momentum, though ADX strength (33.3) suggests trend continuation rather than reversal.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 57
+}

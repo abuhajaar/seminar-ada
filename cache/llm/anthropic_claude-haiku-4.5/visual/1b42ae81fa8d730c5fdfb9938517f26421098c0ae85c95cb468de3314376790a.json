@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Price has formed a lower high after the peak at 85500, showing weakening momentum with declining volume on recent candles and a bearish breakdown below the 84500 support level.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 49
+}

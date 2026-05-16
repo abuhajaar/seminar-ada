@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.62 EMA crossover signals are weak with fast EMA below slow EMA, RSI near neutral midpoint (45), and ADX too low (21.5) to confirm a strong trend, though positive MACD histogram suggests mild bullish momentum.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 63
+}

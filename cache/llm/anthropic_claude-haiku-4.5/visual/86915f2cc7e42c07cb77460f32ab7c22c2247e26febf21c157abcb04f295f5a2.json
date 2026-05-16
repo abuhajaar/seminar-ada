@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.55 Price is consolidating in a narrow range (83,500-83,800) after a significant decline from 85,000, showing indecision with mixed volume and no clear directional breakout yet.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 53
+}

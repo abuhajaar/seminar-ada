@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Negative CVD of -678.92 indicates sustained selling pressure with recent delta deterioration of -73.95, suggesting continued downside momentum and weak buyer participation.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 95,
+  "output_tokens": 45
+}

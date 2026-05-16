@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.62 RSI near midpoint (45.6) suggests no clear directional bias, while negative MACD histogram and weak ADX (19.6) indicate insufficient momentum to commit to a directional trade.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 53
+}

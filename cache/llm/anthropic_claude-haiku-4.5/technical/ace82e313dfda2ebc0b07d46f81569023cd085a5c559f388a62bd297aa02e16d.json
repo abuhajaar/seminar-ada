@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.62 Fast EMA below slow EMA with negative MACD histogram suggests downward pressure, but RSI at 43.77 indicates neither overbought nor oversold conditions, and weak ADX (24.93) signals insufficient trend strength for a decisive directional move.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 67
+}

@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.65 Price is consolidating near support after a sharp decline from 82000 to 79000, with mixed volume signals and no clear directional conviction yet.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 42
+}

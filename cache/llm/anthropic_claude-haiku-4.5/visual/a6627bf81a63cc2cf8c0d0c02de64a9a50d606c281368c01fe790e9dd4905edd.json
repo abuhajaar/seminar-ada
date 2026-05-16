@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.55 Price is consolidating near resistance around 85,500 after a recent spike, showing mixed signals with elevated volume but lack of clear directional conviction in the last few candles.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 47
+}

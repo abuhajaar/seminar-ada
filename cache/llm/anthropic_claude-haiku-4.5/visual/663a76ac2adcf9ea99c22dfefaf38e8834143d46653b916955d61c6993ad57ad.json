@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Price has formed a lower high pattern after rejecting the 86000 resistance level, with recent candles showing weakness and declining volume, indicating bearish momentum.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 43
+}

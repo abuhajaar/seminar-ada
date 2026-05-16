@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Strong uptrend exhaustion with diverging volume at resistance level (~85,500), showing weakening momentum despite price reaching new highs.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 39
+}

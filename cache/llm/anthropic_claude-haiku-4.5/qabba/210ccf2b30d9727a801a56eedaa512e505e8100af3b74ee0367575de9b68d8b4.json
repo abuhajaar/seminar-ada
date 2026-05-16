@@ -1,0 +1,6 @@
+{
+  "content": "BUY 0.62 Positive CVD of 48.83 with recent delta momentum of +3.40 suggests accumulation and buying pressure, though moderate confidence due to absolute CVD magnitude.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 95,
+  "output_tokens": 48
+}

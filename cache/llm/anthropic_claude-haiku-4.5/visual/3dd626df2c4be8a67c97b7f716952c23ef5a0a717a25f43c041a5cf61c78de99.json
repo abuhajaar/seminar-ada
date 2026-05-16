@@ -1,0 +1,6 @@
+{
+  "content": "BUY 0.72 RATIONALE: Price has recovered from mid-April lows, establishing higher lows and higher highs with a strong uptrend over the last 3 days; volume remains moderate and the latest candle closes near its high, suggesting bullish momentum continuation.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 66
+}

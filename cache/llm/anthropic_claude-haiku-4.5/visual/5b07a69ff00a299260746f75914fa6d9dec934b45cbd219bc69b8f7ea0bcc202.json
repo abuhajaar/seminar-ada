@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Price has broken below the previous support level around 83,500 after a sharp decline from the 85,000 peak, with volume spikes confirming the downward momentum and lower lows suggesting continued bearish pressure.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 57
+}

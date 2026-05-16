@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.55 Price is consolidating near resistance after recent volatility spike, with mixed signals between the strong volume surge and indecisive candlestick formations requiring confirmation of directional bias.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 47
+}

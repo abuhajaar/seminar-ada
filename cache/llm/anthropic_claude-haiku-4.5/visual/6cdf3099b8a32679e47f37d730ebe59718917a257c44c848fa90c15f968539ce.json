@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.65 Price has stabilized near 79,500-80,000 after a sharp decline from 82,000, showing potential support formation but lacking clear directional conviction with mixed candlestick patterns and declining volume.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 55
+}

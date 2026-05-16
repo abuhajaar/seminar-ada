@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Negative CVD delta (-83.69) indicates recent selling pressure despite elevated cumulative volume delta, suggesting momentum reversal risk.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 96,
+  "output_tokens": 37
+}

@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Price has broken below key support levels with lower lows and lower highs, forming a downtrend; recent consolidation near 84,500 shows weakness, and volume spikes on red candles suggest selling pressure.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 56
+}

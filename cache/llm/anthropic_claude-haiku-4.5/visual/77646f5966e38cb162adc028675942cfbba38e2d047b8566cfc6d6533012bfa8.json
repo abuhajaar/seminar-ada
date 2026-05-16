@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Downtrend continuation with lower highs and lows; price rejected at resistance around 84000 and has declined ~1500 points; volume diminishing suggests weakening momentum.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 49
+}

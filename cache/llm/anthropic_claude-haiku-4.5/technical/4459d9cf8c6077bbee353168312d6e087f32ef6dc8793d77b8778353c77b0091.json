@@ -1,0 +1,6 @@
+{
+  "content": "BUY 0.42 Fast EMA above slow EMA with positive MACD histogram, but weak ADX (11.88) and neutral RSI (48.47) limit conviction.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 46
+}

@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.65 Price has reached a local resistance near 86000 after a strong uptrend, showing consolidation with mixed candles and declining volume, suggesting a pause before the next directional move.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 49
+}

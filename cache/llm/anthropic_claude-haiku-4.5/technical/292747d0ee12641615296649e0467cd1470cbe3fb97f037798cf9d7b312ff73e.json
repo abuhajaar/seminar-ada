@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.62 RSI near oversold (41) suggests potential bounce, but weak ADX (14.1) and negative MACD histogram indicate lack of directional conviction; wait for clearer trend confirmation.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 51
+}

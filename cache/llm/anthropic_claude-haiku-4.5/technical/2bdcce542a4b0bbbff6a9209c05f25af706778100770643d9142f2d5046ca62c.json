@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.62 EMA crossover signals are weak with fast EMA slightly above slow EMA, RSI near midpoint (58.5) shows no clear directional bias, and negative MACD histogram with moderate ADX (25) suggests consolidation rather than a strong trending opportunity.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 67
+}

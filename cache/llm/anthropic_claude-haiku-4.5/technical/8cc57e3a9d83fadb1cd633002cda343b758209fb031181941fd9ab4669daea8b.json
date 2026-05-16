@@ -1,0 +1,6 @@
+{
+  "content": "BUY 0.62 Fast EMA above slow EMA with positive MACD histogram and RSI in neutral zone, though weak ADX suggests limited trend strength.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 40
+}

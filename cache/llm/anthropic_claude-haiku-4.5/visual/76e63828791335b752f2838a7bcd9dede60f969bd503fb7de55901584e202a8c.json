@@ -1,0 +1,6 @@
+{
+  "content": "BUY 0.62 Price has recovered from the 79000 support level with higher lows and higher closes over the last 4 candles, showing early reversal momentum after a significant downtrend.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 50
+}

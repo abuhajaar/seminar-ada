@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.42 Fast EMA slightly above slow EMA with neutral RSI (52) suggests weak upside, but negative MACD histogram and low ADX (12.8) indicate insufficient trend strength to commit to a directional trade.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 57
+}

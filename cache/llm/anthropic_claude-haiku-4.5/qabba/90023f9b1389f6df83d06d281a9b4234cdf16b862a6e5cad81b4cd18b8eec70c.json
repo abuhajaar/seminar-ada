@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.62 Negative cumulative volume delta indicates sustained selling pressure despite recent positive delta, suggesting bears maintain control.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 95,
+  "output_tokens": 30
+}

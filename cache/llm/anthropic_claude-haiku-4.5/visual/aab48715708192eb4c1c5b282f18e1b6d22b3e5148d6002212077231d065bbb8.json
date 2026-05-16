@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.62 Price is consolidating near resistance around 85,500 after a strong rally, with decreasing volume suggesting momentum is waning; wait for a breakout above 86,000 or breakdown below 85,200 for clearer directional confirmation.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 63
+}

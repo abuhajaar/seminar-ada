@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.45 CVD is positive but deteriorating rapidly with negative delta, suggesting weakening momentum and unclear directional conviction.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 95,
+  "output_tokens": 32
+}

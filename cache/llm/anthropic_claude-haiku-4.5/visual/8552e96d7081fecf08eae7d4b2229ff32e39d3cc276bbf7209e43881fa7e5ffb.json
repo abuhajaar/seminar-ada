@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Price has broken below the 83,500 support level with increased volume spike at 19:30, forming a lower low and indicating bearish momentum continuation.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 43
+}

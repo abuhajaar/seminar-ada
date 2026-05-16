@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.65 Price is consolidating in a narrow range (84,500-85,500) after recent volatility, with the latest candle showing indecision; wait for a breakout above 85,500 or below 84,500 to confirm directional bias.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 66
+}

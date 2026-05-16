@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.45 CVD is positive but delta is negative, indicating weakening momentum; insufficient directional conviction to act.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 96,
+  "output_tokens": 31
+}

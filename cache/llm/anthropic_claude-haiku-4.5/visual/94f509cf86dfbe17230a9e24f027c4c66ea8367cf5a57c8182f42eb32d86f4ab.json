@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.65 Price has declined from 82000 to 79000 with increased volatility and volume spikes, suggesting indecision; wait for a clear breakout direction or support confirmation before committing.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 51
+}

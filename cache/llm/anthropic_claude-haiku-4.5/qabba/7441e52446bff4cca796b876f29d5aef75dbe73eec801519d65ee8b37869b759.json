@@ -1,0 +1,6 @@
+{
+  "content": "BUY 0.62 Positive CVD of 814.52 with modest delta momentum (0.165) suggests accumulation phase with moderate buying pressure; confidence tempered by relatively small delta relative to absolute CVD level.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 95,
+  "output_tokens": 53
+}

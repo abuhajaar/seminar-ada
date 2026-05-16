@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.78 RSI at 77.8 indicates overbought conditions; despite positive MACD histogram, strong ADX (39.2) confirms downtrend momentum with fast EMA above slow EMA showing weakening bullish structure.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 59
+}

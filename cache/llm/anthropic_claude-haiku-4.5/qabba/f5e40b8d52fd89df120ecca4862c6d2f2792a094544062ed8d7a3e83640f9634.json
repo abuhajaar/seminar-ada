@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.62 Negative CVD of -727.47 indicates sustained selling pressure despite recent positive delta, suggesting bears maintain control with insufficient momentum reversal.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 95,
+  "output_tokens": 39
+}

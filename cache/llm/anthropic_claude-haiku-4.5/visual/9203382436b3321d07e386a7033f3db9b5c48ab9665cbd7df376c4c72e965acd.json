@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Clear downtrend with lower highs and lows over the period, recent breakdown below 84000 support level, and declining volume on rallies indicating weakening buying pressure.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 47
+}

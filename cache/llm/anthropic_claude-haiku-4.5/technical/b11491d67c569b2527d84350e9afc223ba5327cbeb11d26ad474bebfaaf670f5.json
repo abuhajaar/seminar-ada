@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Strong downward MACD histogram (-53.27) with elevated ADX (37.86) indicates strengthening bearish momentum despite neutral RSI (53.67), suggesting selling pressure is building.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 52
+}

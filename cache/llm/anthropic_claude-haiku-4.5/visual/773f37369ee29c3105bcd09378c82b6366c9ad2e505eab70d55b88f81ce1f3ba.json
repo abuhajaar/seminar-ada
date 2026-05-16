@@ -1,0 +1,6 @@
+{
+  "content": "BUY 0.62 Price has recovered from the 83,500 support level with higher lows and recent bullish candles, showing upward momentum toward the 84,500 resistance zone.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 48
+}

@@ -1,0 +1,6 @@
+{
+  "content": "BUY 0.62 Positive cumulative volume delta of 1744.11 indicates sustained buying pressure despite recent negative delta, suggesting accumulation phase with dip absorption.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 96,
+  "output_tokens": 42
+}

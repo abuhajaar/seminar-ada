@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.45 Price is consolidating near support after a prolonged downtrend with mixed signals\u2014recent recovery attempts face resistance, and volume remains insufficient to confirm a decisive directional breakout.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 46
+}

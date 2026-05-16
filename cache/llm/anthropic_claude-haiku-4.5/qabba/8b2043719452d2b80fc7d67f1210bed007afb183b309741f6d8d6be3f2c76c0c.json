@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.62 Negative CVD indicates sustained selling pressure despite recent positive delta; accumulation of sell orders outweighs recovery attempts.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 95,
+  "output_tokens": 35
+}

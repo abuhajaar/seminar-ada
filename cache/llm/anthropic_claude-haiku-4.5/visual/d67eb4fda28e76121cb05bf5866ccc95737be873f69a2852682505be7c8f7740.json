@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.55 Price is consolidating after a sharp spike and pullback around 13:45, with recent candles showing indecision and no clear directional bias; wait for a breakout above 85,200 or below 84,500 for confirmation.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 63
+}

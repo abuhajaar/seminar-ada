@@ -1,0 +1,6 @@
+{
+  "content": "BUY 0.72 Strong uptrend confirmed by fast EMA above slow EMA, positive MACD histogram, elevated RSI (63) showing momentum without overbought extremes, and very strong ADX (53) indicating robust directional strength.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 60
+}

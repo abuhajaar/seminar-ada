@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Fast EMA below slow EMA with negative MACD histogram and moderate RSI showing downward momentum, though ADX strength suggests trend continuation rather than reversal.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 44
+}

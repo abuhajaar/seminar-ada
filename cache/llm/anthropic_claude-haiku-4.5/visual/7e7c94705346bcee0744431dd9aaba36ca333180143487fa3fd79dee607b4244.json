@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Strong downtrend with lower highs and lows, recent breakdown below 81,000 support level, and elevated volume on red candles indicating selling pressure.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 44
+}

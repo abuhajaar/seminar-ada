@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.65 RSI near overbought (67) and negative MACD histogram suggest caution despite strong ADX trend, warranting consolidation before directional commitment.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 43
+}

@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.65 Fast EMA below slow EMA with weakening momentum (RSI 44, negative MACD histogram), but ADX strength (32.3) suggests trend persistence warrants caution before reversing position.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 54
+}

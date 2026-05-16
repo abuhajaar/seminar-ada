@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.55 Price is consolidating near recent highs (84000) with mixed candlestick signals and declining volume, suggesting uncertainty before the next directional move.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 42
+}

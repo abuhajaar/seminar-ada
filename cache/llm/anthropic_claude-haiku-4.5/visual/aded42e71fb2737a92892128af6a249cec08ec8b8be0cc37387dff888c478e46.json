@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.55 Price has declined from 82000 to 79000 with increased volatility and volume spikes, showing weakness but currently consolidating near support levels with unclear directional momentum.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 47
+}

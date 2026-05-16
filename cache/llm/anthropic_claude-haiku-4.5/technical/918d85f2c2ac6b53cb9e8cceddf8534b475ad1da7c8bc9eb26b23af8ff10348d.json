@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.62 RSI near midpoint (44.4) suggests indecision, while negative MACD histogram and weak ADX (19.7) indicate lack of directional conviction despite slow EMA above fast EMA.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 55
+}

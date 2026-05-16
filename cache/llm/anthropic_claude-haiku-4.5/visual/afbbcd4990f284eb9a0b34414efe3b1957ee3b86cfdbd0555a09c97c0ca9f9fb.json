@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.55 Price is consolidating near resistance around 85,000 after a strong intraday rally, with volume declining and mixed candlestick signals suggesting indecision before the next directional move.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 51
+}

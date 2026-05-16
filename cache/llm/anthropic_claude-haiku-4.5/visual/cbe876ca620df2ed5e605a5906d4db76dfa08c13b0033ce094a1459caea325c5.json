@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Strong uptrend exhaustion with bearish divergence: price reached new highs (~85,200) while volume declined significantly, and the last two candles show rejection with upper wicks, suggesting weakening buying pressure and potential reversal.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 60
+}

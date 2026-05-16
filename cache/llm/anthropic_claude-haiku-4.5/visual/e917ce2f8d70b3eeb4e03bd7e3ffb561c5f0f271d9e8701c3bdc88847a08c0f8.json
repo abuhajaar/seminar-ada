@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Price rejected at resistance near 85500 after a sharp rally, forming a bearish reversal pattern with declining volume and lower highs, suggesting weakening momentum.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 44
+}

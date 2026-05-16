@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Price has broken below the 84000 support level with increased volume and a series of lower lows, indicating bearish momentum and potential further downside.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 42
+}

@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.62 Fast EMA slightly above slow EMA with weak momentum (RSI near midpoint, negative MACD histogram, and low ADX trend strength) suggests consolidation rather than a clear directional move.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 52
+}

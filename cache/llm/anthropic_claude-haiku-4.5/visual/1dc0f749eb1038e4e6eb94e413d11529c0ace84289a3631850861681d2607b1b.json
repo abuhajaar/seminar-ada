@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.55 Price is consolidating near resistance around 85,000 after a strong initial rally, with declining volume suggesting weakening momentum; wait for a breakout above resistance or pullback confirmation before committing.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 51
+}

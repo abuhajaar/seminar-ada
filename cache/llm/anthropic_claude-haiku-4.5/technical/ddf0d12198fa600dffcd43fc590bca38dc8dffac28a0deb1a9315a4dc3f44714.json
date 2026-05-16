@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.65 RSI near midpoint (55) suggests equilibrium, but negative MACD histogram and strong ADX (40) indicate weakening momentum despite uptrend structure (fast EMA > slow EMA).",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 53
+}

@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Price has formed a lower high after rejecting the 85500 resistance level, with increased selling volume on the recent red candle suggesting downward momentum continuation.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 43
+}

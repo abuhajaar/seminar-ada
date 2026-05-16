@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.55 Price is consolidating near recent highs after a recovery from mid-April lows, but lacks clear directional momentum with mixed candlestick patterns and declining volume suggesting indecision.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 49
+}

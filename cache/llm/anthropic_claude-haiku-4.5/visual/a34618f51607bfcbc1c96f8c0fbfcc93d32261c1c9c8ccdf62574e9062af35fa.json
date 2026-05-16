@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.45 Price is consolidating near support after a sharp selloff from 18:00, with mixed volume signals and unclear directional momentum requiring confirmation before committing to a position.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 45
+}

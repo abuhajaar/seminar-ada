@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.62 Fast EMA slightly above slow EMA with neutral RSI at midpoint, but negative MACD histogram and moderate ADX suggest consolidation without clear directional conviction.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 45
+}

@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Price has broken below key support levels with lower highs and lows, volume spikes on red candles suggest selling pressure, and the asset is trading near session lows with no clear reversal signals.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 52
+}

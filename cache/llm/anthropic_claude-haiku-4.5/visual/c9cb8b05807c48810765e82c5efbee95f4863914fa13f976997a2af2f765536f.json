@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Price has formed a lower high after the spike to 85500, breaking below the previous support level around 84500 with increasing volume, indicating weakening momentum and potential downtrend continuation.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 50
+}

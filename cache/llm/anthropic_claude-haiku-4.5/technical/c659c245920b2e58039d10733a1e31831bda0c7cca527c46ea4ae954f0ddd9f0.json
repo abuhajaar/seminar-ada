@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.62 RSI near midpoint (43) suggests indecision, while negative MACD histogram and weak ADX (11.8) indicate lack of directional conviction despite slight bearish EMA crossover setup.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 54
+}

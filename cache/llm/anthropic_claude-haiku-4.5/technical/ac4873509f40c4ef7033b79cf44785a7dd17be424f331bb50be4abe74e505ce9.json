@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.62 RSI near midpoint (41) suggests no clear directional bias, while weak ADX (15.8) indicates low trend strength despite slight bearish MACD histogram, warranting patience for stronger confirmation.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 54
+}

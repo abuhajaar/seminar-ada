@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.62 EMA crossover signals are neutral with fast slightly above slow, but negative MACD histogram and moderate RSI (49) suggest consolidation without clear directional conviction.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 45
+}

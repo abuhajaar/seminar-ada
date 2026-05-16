@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.45 Price is in a prolonged downtrend with lower highs and lows, but recent consolidation and a modest bounce from the 83,500 support level suggest waiting for clearer directional confirmation before committing to a position.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 59
+}

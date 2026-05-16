@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Price has broken below the previous support level around 85,000 with increasing volume spikes, forming a lower high pattern indicative of weakening momentum and potential further downside.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 47
+}

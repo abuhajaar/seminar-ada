@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.65 Price is consolidating near 85,000 after a sharp intraday spike and pullback, with volume declining into the close, suggesting indecision and warrant waiting for clearer directional confirmation.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 52
+}

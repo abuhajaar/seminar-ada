@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Strong downward MACD histogram (-100.6) with high ADX (42.2) confirms trend strength despite neutral RSI (51.2), while fast EMA below slow EMA signals bearish momentum.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 56
+}

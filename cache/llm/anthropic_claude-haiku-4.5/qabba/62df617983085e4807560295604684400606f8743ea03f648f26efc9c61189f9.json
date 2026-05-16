@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Strong negative CVD delta (-108.47) indicates aggressive selling pressure despite positive cumulative position, suggesting momentum reversal risk.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 95,
+  "output_tokens": 36
+}

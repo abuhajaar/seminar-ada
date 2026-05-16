@@ -1,0 +1,6 @@
+{
+  "content": "BUY 0.62 Price has recovered from mid-April dip, establishing higher lows with recent candles closing near session highs, suggesting bullish momentum resumption toward the 85,500 resistance level.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 51
+}

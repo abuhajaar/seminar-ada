@@ -1,0 +1,6 @@
+{
+  "content": "BUY 0.72 Fast EMA above slow EMA with strong ADX (52.3) confirming uptrend, RSI (59.8) neutral-bullish, though negative MACD histogram suggests momentum may be weakening.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 58
+}

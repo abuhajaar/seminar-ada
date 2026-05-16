@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Price has formed a lower high pattern with declining volume after the April 13 peak, indicating weakening momentum and potential downtrend continuation toward support levels.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 42
+}

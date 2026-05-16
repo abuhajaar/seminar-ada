@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.65 Recent price rejection from ~85,100 resistance with a large red candle and declining volume suggests weakening momentum; price has failed to break above previous highs and is now pulling back.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 49
+}

@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.42 RSI near midpoint (49.9) and weak ADX (9.6) indicate indecision; negative MACD histogram suggests slight downward pressure but insufficient momentum for a decisive signal.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 52
+}

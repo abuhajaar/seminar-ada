@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Price has reached a local resistance level near 84000 with a bearish engulfing candle and declining volume, suggesting potential pullback or reversal.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 43
+}

@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Price has formed a lower high after the 13:00 peak, broken below the 85000 support level, and is now consolidating near 84500 with declining volume, indicating weakening momentum and potential further downside.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 59
+}

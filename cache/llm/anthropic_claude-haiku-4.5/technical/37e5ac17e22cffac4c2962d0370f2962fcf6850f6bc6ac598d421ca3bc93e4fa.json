@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.62 Fast EMA below slow EMA with positive MACD histogram suggests weakening uptrend; RSI near midpoint lacks conviction, but ADX strength (34.2) indicates directional move downward is developing.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 56
+}

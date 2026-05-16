@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.55 Price is consolidating after a sharp decline from the 85500 peak, showing indecision with mixed candlesticks and reduced volume, requiring confirmation of direction before committing to a position.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 51
+}

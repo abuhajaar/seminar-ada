@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.55 Price is consolidating near recent highs with mixed signals\u2014strong volume spike at 02:30 followed by lower volume, and recent rejection from 85500 suggests caution despite uptrend structure.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 53
+}

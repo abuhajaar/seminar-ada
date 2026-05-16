@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Price has declined from 86000 peak to 84500 support level with weakening volume and lower highs/lows indicating bearish momentum continuation.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 43
+}

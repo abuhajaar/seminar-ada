@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.62 RSI near midpoint (41.9) with bearish MACD histogram and weak trend strength (ADX 14.6) suggest consolidation; wait for clearer directional confirmation.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 51
+}

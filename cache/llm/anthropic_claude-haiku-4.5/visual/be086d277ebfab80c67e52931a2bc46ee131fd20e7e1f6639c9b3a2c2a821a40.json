@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.55 Price is in a recovery phase after a prolonged downtrend, but lacks clear confirmation with weak volume and resistance near the 84000 level preventing decisive breakout.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 45
+}

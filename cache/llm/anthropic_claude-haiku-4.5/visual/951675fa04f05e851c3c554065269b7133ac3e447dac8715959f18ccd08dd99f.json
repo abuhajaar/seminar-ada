@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.55 Price is consolidating near resistance after a recent spike, with mixed volume signals and no clear directional conviction; wait for breakout confirmation above 85500 or breakdown below 84500.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 49
+}

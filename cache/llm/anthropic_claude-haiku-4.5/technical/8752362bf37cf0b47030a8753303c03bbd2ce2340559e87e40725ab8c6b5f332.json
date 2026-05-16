@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 RSI overbought at 75.78 signals potential pullback despite bullish EMA crossover and strong ADX momentum.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 38
+}

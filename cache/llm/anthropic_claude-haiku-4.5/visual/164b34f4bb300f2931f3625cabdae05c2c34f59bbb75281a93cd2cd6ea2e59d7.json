@@ -1,0 +1,6 @@
+{
+  "content": "BUY 0.72 RATIONALE: Price has recovered to near recent highs (~86000) after consolidation, volume surge on latest candle confirms bullish momentum, and uptrend structure remains intact with higher lows.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 54
+}

@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Price has broken below the previous support level around 84,000 after a failed rally attempt, showing weakening momentum with lower highs and increased selling volume at 19:00.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 48
+}

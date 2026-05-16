@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.55 Price is consolidating near support after a sharp rally, with mixed signals between the strong volume spike at 23:30 and the subsequent red candle suggesting uncertainty about directional continuation.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 48
+}

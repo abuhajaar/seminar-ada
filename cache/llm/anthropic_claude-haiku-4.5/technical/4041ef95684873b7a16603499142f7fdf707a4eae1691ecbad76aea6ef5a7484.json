@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.62 EMA crossover signals are neutral with fast slightly above slow, RSI near midpoint suggests no strong directional bias, but negative MACD histogram and moderate ADX indicate weakening momentum.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 50
+}

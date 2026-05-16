@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.75 Strong downtrend with lower lows and lower highs over the past 4 periods, accompanied by elevated volume on red candles indicating selling pressure and potential continuation of decline.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 47
+}

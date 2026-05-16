@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Strong downtrend from 82000 to 79000 with lower highs and lows, recent volume spike on red candles confirms selling pressure, and price is testing support near 79000 with weak recovery attempts.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 58
+}

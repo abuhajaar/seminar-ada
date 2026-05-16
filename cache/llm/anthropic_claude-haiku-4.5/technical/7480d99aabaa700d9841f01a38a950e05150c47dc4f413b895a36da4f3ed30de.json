@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.62 Fast EMA above slow EMA suggests uptrend, but RSI near overbought (63.9), negative MACD histogram, and weak ADX (23.8) indicate momentum is fading and pullback risk is elevated.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 61
+}

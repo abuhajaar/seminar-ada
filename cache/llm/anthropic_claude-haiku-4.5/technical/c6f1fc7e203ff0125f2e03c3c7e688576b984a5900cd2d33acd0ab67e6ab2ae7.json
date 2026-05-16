@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.65 Fast EMA below slow EMA with weakening momentum (RSI 40, ADX 27), but positive MACD histogram suggests potential reversal; wait for confirmation before committing.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 50
+}

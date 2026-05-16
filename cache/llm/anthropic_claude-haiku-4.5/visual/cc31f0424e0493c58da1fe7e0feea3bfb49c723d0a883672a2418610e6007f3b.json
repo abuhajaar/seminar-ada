@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Price has declined from 86000 to 84500 over the period with lower highs and lower lows, forming a clear downtrend; recent consolidation near support shows weakening momentum with reduced volume, suggesting further downside risk.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 61
+}

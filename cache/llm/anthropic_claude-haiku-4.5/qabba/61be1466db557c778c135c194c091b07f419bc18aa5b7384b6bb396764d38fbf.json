@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Negative CVD delta of -123.35 indicates recent selling pressure outweighing buying, suggesting downside momentum despite positive cumulative position.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 95,
+  "output_tokens": 41
+}

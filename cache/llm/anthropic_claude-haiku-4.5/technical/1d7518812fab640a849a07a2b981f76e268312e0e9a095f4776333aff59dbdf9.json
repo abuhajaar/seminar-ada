@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Fast EMA above slow EMA shows uptrend, but RSI near 50 (neutral), negative MACD histogram indicates weakening momentum, and strong ADX (36.1) confirms the downward trend is strengthening.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 60
+}

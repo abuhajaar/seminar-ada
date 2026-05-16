@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Price has reached resistance near 83000 after a strong uptrend, showing a bearish reversal candle with a long upper wick and lower close, accompanied by declining volume on the latest candle suggesting weakening momentum.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 473,
+  "output_tokens": 58
+}

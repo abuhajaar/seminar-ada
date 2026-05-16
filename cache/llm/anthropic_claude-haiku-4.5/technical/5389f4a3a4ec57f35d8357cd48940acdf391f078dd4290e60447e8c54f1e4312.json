@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.65 EMA crossover signals are weak with fast EMA below slow EMA, RSI at 44 suggests neutral momentum, but positive MACD histogram and strong ADX (30.2) indicate an emerging trend that warrants waiting for clearer directional confirmation.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 113,
+  "output_tokens": 66
+}

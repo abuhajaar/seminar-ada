@@ -1,0 +1,6 @@
+{
+  "content": "SELL 0.72 Price has broken below key support levels with increased selling volume at 18:30, forming a lower low pattern after rejecting the 84,500 resistance multiple times.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 45
+}

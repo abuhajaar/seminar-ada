@@ -1,0 +1,6 @@
+{
+  "content": "HOLD 0.65 Price is consolidating near resistance around 85,500-85,700 with decreasing volume and mixed candlestick signals, suggesting indecision before the next directional move.",
+  "model": "anthropic/claude-haiku-4.5",
+  "input_tokens": 448,
+  "output_tokens": 49
+}
