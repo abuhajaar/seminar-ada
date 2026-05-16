@@ -15,12 +15,14 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from types import SimpleNamespace
 
+import httpx
 import pytest
 
 from core import walkforward
 from core.run_state import RunState
 from core.types import Bar
 from llm.budget import BudgetExceededError
+from llm.client import LLMResponseError
 from strategies.base import Context
 from strategies.traditional import TraditionalStrategy
 
@@ -242,3 +244,103 @@ async def test_walkforward_empty_assets_creates_no_run_dir(tmp_path: Path):
     assert results == {}
     # No `runs/` directory should be materialised for an empty asset list.
     assert not (tmp_path / "runs").exists()
+
+
+# ---------------------------------------------------------------------------
+# C5: transient-error handling
+#
+# Pre-fix, only BudgetExceededError was caught. Any other failure raised
+# by the LLM leg (httpx.HTTPStatusError after retry exhaustion, malformed
+# LLMResponseError, asyncio.TimeoutError) crashed the entire walk and
+# discarded all subsequent assets — fatal for the seminar demo.
+#
+# The hardened path catches httpx.HTTPError, asyncio.TimeoutError, and
+# LLMResponseError per-asset, marks the LLM leg as
+# {"status": "transient_error", "error": str(e)}, and continues to the
+# next asset. Truly unexpected errors (ValueError, RuntimeError other
+# than LLMResponseError/BudgetExceededError) still propagate.
+# ---------------------------------------------------------------------------
+
+
+class _ExceptionRaisingStrategy:
+    """Fake LLM strategy whose on_bar raises a configurable exception."""
+
+    def __init__(self, exc: BaseException) -> None:
+        self.exc = exc
+
+    async def on_bar(self, bar: Bar, ctx: Context):  # noqa: ARG002
+        raise self.exc
+
+
+async def test_walkforward_handles_http_status_error():
+    cfg = _make_cfg(out_dir=None)
+    loader = _bars_loader_factory()
+
+    http_err = httpx.HTTPStatusError(
+        "503 Service Unavailable",
+        request=httpx.Request("POST", "https://openrouter.ai/api/v1/chat/completions"),
+        response=httpx.Response(503),
+    )
+
+    def build(_symbol: str):
+        return TraditionalStrategy(), _ExceptionRaisingStrategy(http_err)
+
+    progress: list[tuple[str, int, int]] = []
+    results = await walkforward.run(
+        cfg.run.assets, loader, build, cfg,
+        on_progress=lambda s, i, t: progress.append((s, i, t)),
+    )
+
+    assert set(results) == {"A/USDT", "B/USDT"}
+    for sym in ("A/USDT", "B/USDT"):
+        llm = results[sym]["llm"]
+        assert llm["status"] == "transient_error"
+        assert "503" in llm["error"]
+        # Engine raised before returning portfolios, so trad is lost too.
+        assert results[sym]["trad"] == {"status": "not_run"}
+    assert progress == [("A/USDT", 1, 2), ("B/USDT", 2, 2)]
+
+
+async def test_walkforward_handles_llm_response_error():
+    cfg = _make_cfg(out_dir=None)
+    loader = _bars_loader_factory()
+
+    def build(_symbol: str):
+        return TraditionalStrategy(), _ExceptionRaisingStrategy(
+            LLMResponseError("missing 'choices'"),
+        )
+
+    results = await walkforward.run(cfg.run.assets, loader, build, cfg)
+
+    for sym in ("A/USDT", "B/USDT"):
+        assert results[sym]["llm"]["status"] == "transient_error"
+        assert "choices" in results[sym]["llm"]["error"]
+
+
+async def test_walkforward_handles_timeout_error():
+    cfg = _make_cfg(out_dir=None)
+    loader = _bars_loader_factory()
+
+    def build(_symbol: str):
+        return TraditionalStrategy(), _ExceptionRaisingStrategy(
+            TimeoutError("LLM call timed out"),
+        )
+
+    results = await walkforward.run(cfg.run.assets, loader, build, cfg)
+
+    for sym in ("A/USDT", "B/USDT"):
+        assert results[sym]["llm"]["status"] == "transient_error"
+
+
+async def test_walkforward_propagates_unexpected_errors():
+    """Non-transient programming errors must NOT be silently swallowed."""
+    cfg = _make_cfg(out_dir=None)
+    loader = _bars_loader_factory()
+
+    def build(_symbol: str):
+        return TraditionalStrategy(), _ExceptionRaisingStrategy(
+            ValueError("bug in strategy code"),
+        )
+
+    with pytest.raises(ValueError, match="bug in strategy code"):
+        await walkforward.run(cfg.run.assets, loader, build, cfg)

@@ -18,6 +18,13 @@ For each configured symbol:
    and the walk continues to the next asset. No per-asset CSV artifacts are
    written for a budget-exceeded asset, and it is omitted from the aggregate
    ``summary.json``.
+7. On transient LLM/network failures (``httpx.HTTPError``,
+   ``asyncio.TimeoutError``, ``LLMResponseError`` after OpenRouter retry
+   exhaustion or malformed payloads), the same per-asset short-circuit
+   applies: ``trad={"status": "not_run"}`` and
+   ``llm={"status": "transient_error", "error": ...}``, walk continues.
+   Truly unexpected errors (``ValueError``, other ``RuntimeError`` subclasses)
+   still propagate and abort the walk.
 """
 
 from __future__ import annotations
@@ -26,10 +33,13 @@ import logging
 from collections.abc import Callable, Iterable
 from typing import Any
 
+import httpx
+
 from core import engine, persistence
 from core.run_state import RunState
 from core.types import Bar
 from llm.budget import BudgetExceededError
+from llm.client import LLMResponseError
 from strategies.base import Strategy
 
 logger = logging.getLogger(__name__)
@@ -120,6 +130,21 @@ async def run(
             logger.warning(
                 "Budget exceeded for %s: %s. Continuing with remaining assets.",
                 symbol, e,
+            )
+        except (TimeoutError, httpx.HTTPError, LLMResponseError) as e:
+            # Transient LLM/network failures: OpenRouter 5xx after retries,
+            # malformed 200-OK payloads, or socket timeouts. Mark this
+            # asset's LLM leg as a transient error and continue to the
+            # next asset rather than crashing the entire walk. Trad leg
+            # is also discarded because engine.run_async aborted before
+            # returning portfolios (re-audit C5).
+            llm_metrics = {
+                "status": "transient_error",
+                "error": str(e) or type(e).__name__,
+            }
+            logger.warning(
+                "Transient error for %s (%s: %s). Continuing with remaining assets.",
+                symbol, type(e).__name__, e,
             )
 
         # Persist per-asset CSV artifacts when out_dir is set AND the engine
