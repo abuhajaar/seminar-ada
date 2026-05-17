@@ -11,7 +11,7 @@ import pandas as pd
 
 from core.engine_sync import run_sync
 from data.loader import load_bars
-from data.paths import cvd_parquet_path, ohlcv_csv_path
+from data.paths import cvd_csv_path, ohlcv_csv_path
 from strategies.traditional import TraditionalStrategy
 
 
@@ -42,9 +42,9 @@ def _seed_synthetic(tmp_path: Path, n: int = 300) -> None:
         "timestamp": ts, "cvd_delta": cvd_delta, "cvd": cvd,
         "taker_buy_volume": taker_buy,
     })
-    cp = cvd_parquet_path("BTC/USDT", "1h", root=tmp_path)
+    cp = cvd_csv_path("BTC/USDT", "1h", root=tmp_path)
     cp.parent.mkdir(parents=True, exist_ok=True)
-    cvd_df.to_parquet(cp, index=False)
+    cvd_df.to_csv(cp, index=False)
 
 
 def test_traditional_runs_end_to_end_on_synthetic(tmp_path: Path):
