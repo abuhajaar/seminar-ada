@@ -106,7 +106,7 @@ The math is a two-line identity. Volume equals taker-buy plus taker-sell. CVD-de
 
 After preprocessing, the engine eats a stream of Python `Bar` dataclasses. Think of each `Bar` as one neat line in the trading room's logbook — everything our analysts need to know about one fifteen-minute slice of the market. Nine fields total: timestamp, OHLC, volume, taker-buy volume, cumulative CVD, and the current bar's CVD delta. One `Bar` per fifteen-minute slot. 480 `Bar` objects in total.
 
-The loader at `data/loader.py:19` strictly checks timestamp alignment between the OHLCV CSV and the CVD parquet — if even one timestamp is off, it throws a `ValueError` and the run stops cold. We never silently misalign data. That kind of bug — two different bars accidentally pretending to be the same bar — would poison everything downstream. So we'd much rather crash loudly than quietly give wrong answers.
+The loader at `data/loader.py:19` strictly checks timestamp alignment between the OHLCV CSV and the CVD CSV — if even one timestamp is off, it throws a `ValueError` and the run stops cold. We never silently misalign data. That kind of bug — two different bars accidentally pretending to be the same bar — would poison everything downstream. So we'd much rather crash loudly than quietly give wrong answers.
 
 [BULLETS]
 - `Bar(timestamp, OHLC, volume, taker_buy_volume, cvd, cvd_delta)`
@@ -159,7 +159,7 @@ The function gives back two columns: `st`, the stop-line price, and `dir`, the r
 [SLIDE 12: Transformation Pipeline Diagram]
 [10:30]
 
-Putting it all together, here's the end-to-end pipeline. Binance REST gives us the twelve-column kline JSON. ccxt paginates it a thousand rows at a time. We write seven columns to an OHLCV CSV. We derive CVD into a parquet file. The loader joins them on timestamp and yields a stream of `Bar` objects. From that stream, two consumers diverge — the traditional rulebook over here, and the LLM feature extractor plus chart renderer over there.
+Putting it all together, here's the end-to-end pipeline. Binance REST gives us the twelve-column kline JSON. ccxt paginates it a thousand rows at a time. We write seven columns to an OHLCV CSV. We derive CVD into a separate CSV file — same plain-text format, easy to diff, easy to inspect. The loader joins them on timestamp and yields a stream of `Bar` objects. From that stream, two consumers diverge — the traditional rulebook over here, and the LLM feature extractor plus chart renderer over there.
 
 Now here's the key point. Everything **downstream** of the `Bar` stream is what makes the two bots different. Everything **upstream** of it is shared. Same exchange, same bars, same indicators. That separation is intentional — it's what makes the comparison fair. Both bots get the same trading-room window, the same view of the market. What changes is who's sitting at the desk and how they decide.
 
@@ -301,6 +301,8 @@ After this gate, the LLM bot emits the exact same `Signal` dataclass as the trad
 Alright, let me show this running. The demo is a **cache replay** — and that's key. We are **not** calling OpenRouter live during the seminar, because that would risk network hiccups eating my talk time. Instead, we've committed one thousand two hundred and sixty-three cached LLM responses to disk. Think of it as the recorded transcript of every analyst meeting from the test window — we hit "play" instead of asking them all over again.
 
 The cache key is a tuple — model, agent name, prompt hash, image hash, and bar timestamp in milliseconds. So every LLM call `main.py` makes hits the cache instead of the network. End-to-end run completes in about thirty seconds.
+
+One more thing — for live audit questions, we can flip `run.dump_bar_artifacts: true` in `config.yaml`, and every single candle leaves a folder behind under `results\runs\<id>\BTC_USDT\bars\<NNN>\`. Inside each folder: the exact indicator scalars the traditional bot saw, the exact prompts each LLM analyst received, the chart PNG that went to the visual agent, the raw text replies, and the final decision JSON. So if someone in the room asks "what did the chart analyst actually see at bar 217?" — we can open that folder and show them, byte-for-byte.
 
 [NOTE TO PRESENTER] Switch to terminal. Run `.\.venv\Scripts\python.exe main.py`. Talk through the Rich TUI as it updates: per-bar signal, equity curves, trade count, win percentage, max drawdown. Total elapsed about thirty seconds.
 

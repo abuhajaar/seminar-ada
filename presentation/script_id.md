@@ -107,7 +107,7 @@ Matematikanya cuma identitas dua baris. *Volume* sama dengan taker-buy plus take
 
 Setelah *preprocessing*, *engine* makan *stream* dataclass `Bar` Python. Bayangin tiap `Bar` itu kayak satu baris rapi di buku log ruang trading — semua yang analis butuh tahu tentang satu irisan pasar lima belas menit. Sembilan field total: *timestamp*, OHLC, *volume*, *taker-buy volume*, CVD kumulatif, dan CVD delta *bar* ini. Satu `Bar` per *slot* lima belas menit. Total 480 objek `Bar`.
 
-*Loader* di `data/loader.py:19` ngecek keselarasan *timestamp* secara ketat antara OHLCV CSV dan CVD parquet — kalau ada satu *timestamp* aja yang nggak sinkron, dia langsung *throw* `ValueError` dan *run* berhenti total. Kami nggak pernah ngebiarin data *silently misalign*. *Bug* macam itu — dua *bar* yang beda pura-pura jadi *bar* yang sama — bakal ngeracunin semua hilirnya. Mendingan *crash* keras daripada diam-diam ngasih jawaban yang salah.
+*Loader* di `data/loader.py:19` ngecek keselarasan *timestamp* secara ketat antara OHLCV CSV dan CVD CSV — kalau ada satu *timestamp* aja yang nggak sinkron, dia langsung *throw* `ValueError` dan *run* berhenti total. Kami nggak pernah ngebiarin data *silently misalign*. *Bug* macam itu — dua *bar* yang beda pura-pura jadi *bar* yang sama — bakal ngeracunin semua hilirnya. Mendingan *crash* keras daripada diam-diam ngasih jawaban yang salah.
 
 [BULLETS]
 - `Bar(timestamp, OHLC, volume, taker_buy_volume, cvd, cvd_delta)`
@@ -160,7 +160,7 @@ Fungsinya ngembaliin dua kolom: `st`, harga garis *stop*-nya, dan `dir`, tanda r
 [SLIDE 12: Diagram Pipeline Transformasi]
 [10:30]
 
-Nyatuin semuanya, inilah *pipeline* ujung ke ujung. Binance REST ngasih kline JSON dua belas kolom. ccxt *paginate* seribu baris sekaligus. Kami tulis tujuh kolom ke OHLCV CSV. Kami turunkan CVD ke file parquet. *Loader* gabungin keduanya di *timestamp* terus ngasih *stream* objek `Bar`. Dari *stream* itu, dua konsumen bercabang — *rulebook* tradisional di sini, *feature extractor* LLM plus *chart renderer* di sini.
+Nyatuin semuanya, inilah *pipeline* ujung ke ujung. Binance REST ngasih kline JSON dua belas kolom. ccxt *paginate* seribu baris sekaligus. Kami tulis tujuh kolom ke OHLCV CSV. Kami turunkan CVD ke file CSV terpisah — format *plain-text* yang sama, gampang di-*diff*, gampang di-*inspect*. *Loader* gabungin keduanya di *timestamp* terus ngasih *stream* objek `Bar`. Dari *stream* itu, dua konsumen bercabang — *rulebook* tradisional di sini, *feature extractor* LLM plus *chart renderer* di sini.
 
 Nah, ini poin kuncinya. Semua yang **di hilir** *Bar stream* itulah yang bikin kedua *bot* beda. Semua yang **di hulu** *Bar stream* adalah *shared*. Exchange sama, *bar* sama, indikator sama. Pemisahan itu sengaja — itulah yang bikin perbandingannya adil. Kedua *bot* dapat *window* ruang trading yang sama, pandangan pasar yang sama. Yang berubah cuma siapa yang duduk di meja dan cara mereka mutusin.
 
@@ -302,6 +302,8 @@ Setelah *gate* ini, *LLM bot* ngeluarin dataclass `Signal` yang persis sama kaya
 Oke, sekarang saya tunjukin ini jalan. Demo-nya adalah ***cache replay*** — dan ini penting. Kami **nggak** manggil OpenRouter live selama seminar, karena itu bakal beresiko masalah jaringan ngabisin waktu talk saya. Sebagai gantinya, kami udah *commit* seribu dua ratus enam puluh tiga respons LLM ter-*cache* ke disk. Bayangin ini kayak rekaman transkrip tiap *meeting* analis dari *window* uji — kami tinggal pencet "play" daripada nanya mereka lagi.
 
 *Cache key*-nya tuple — *model*, nama agent, hash *prompt*, hash *image*, dan *timestamp bar* dalam milidetik. Jadi tiap panggilan LLM yang `main.py` lakuin masuk ke *cache* alih-alih jaringan. *Run end-to-end* selesai sekitar tiga puluh detik.
+
+Satu hal lagi — buat pertanyaan audit *live*, kami bisa nyalain `run.dump_bar_artifacts: true` di `config.yaml`, terus tiap satu *candle* ninggalin folder di bawah `results\runs\<id>\BTC_USDT\bars\<NNN>\`. Di dalam tiap folder: *scalar* indikator persis yang *traditional bot* liat, *prompt* persis yang tiap analis LLM terima, *chart* PNG yang dikirim ke *visual agent*, balasan teks mentah, dan *decision* JSON final. Jadi kalau ada yang nanya di ruangan, "*chart analyst* tadi sebenernya liat apa di *bar* 217?" — kami tinggal buka folder itu dan tunjukin, *byte-for-byte*.
 
 [NOTE TO PRESENTER] Pindah ke terminal. Jalankan `.\.venv\Scripts\python.exe main.py`. Berbicara sambil Rich TUI ter-update: *signal* per *bar*, kurva ekuitas, jumlah *trade*, *win percentage*, *max drawdown*. Total elapsed sekitar tiga puluh detik.
 

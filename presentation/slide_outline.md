@@ -62,7 +62,7 @@ Language-neutral structure. Both `script_en.md` and `script_id.md` index against
       volume, taker_buy_volume, cvd, cvd_delta)
   ```
 - One `Bar` per 15-min interval. 480 bars total for the test window.
-- `data/loader.py:19` `load_bars()` — strict timestamp alignment between OHLCV CSV and CVD parquet; misalignment raises `ValueError`.
+- `data/loader.py:19` `load_bars()` — strict timestamp alignment between OHLCV CSV and CVD CSV; misalignment raises `ValueError`.
 
 ---
 
@@ -98,7 +98,7 @@ Binance REST  ──►  kline JSON (12-col array)
                     ▼
                   OHLCV CSV (7 cols)              ┐
                                                   ├─ data/loader.py
-                  CVD parquet (4 cols, derived) ──┘
+                  CVD CSV (4 cols, derived) ─────┘
                     │  timestamp-aligned join
                     ▼
                   Bar(...) stream (1 per 15m)
@@ -229,6 +229,7 @@ Signal(action=Action.BUY,
 - Run `main.py` against committed LLM cache (1,263 responses, no network, ~30s)
 - Cache key = `(model, agent, prompt_hash, image_hash, bar_timestamp_ms)`
 - Watch Rich TUI: per-bar signal, equity curves, win%, MDD
+- Optional `run.dump_bar_artifacts: true` writes `results/runs/<id>/BTC_USDT/bars/<NNN>/` per candle — prompts, chart PNG, raw analyst replies, decision JSON (for live audit Q&A)
 - Switch to terminal; see `demo_cheatsheet.md` for exact commands
 
 ---
