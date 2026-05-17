@@ -1,51 +1,61 @@
-# Slide Outline — 24 Slides, ~30 Minutes (Data-Pipeline-Heavy)
+# Slide Outline — 26 Slides, ~30 Minutes (Data-Pipeline-Heavy)
 
 Language-neutral structure. Both `script_en.md` and `script_id.md` index against these slide numbers.
 
 ---
 
-## Section 1 — Intro & Problem (3 min)
+## Section 1 — Context, Problem & Hypothesis (4 min)
 
 ### Slide 1 — Title
 - Comparative Study: Classical TA vs LLM Multi-Agent Trading on BTC/USDT
 - Seminar context: Advanced Data Analysis
 - Authors / supervisor / date
 
-### Slide 2 — Research Question
-- Can an LLM multi-agent pipeline read the **same raw market data** as a deterministic technical-analysis rulebook and produce competitive trading decisions?
-- Honest framing: the answer is what we measured, not what we hoped.
-- Today's focus: **the data pipeline** — every transformation from API response to filled trade.
+### Slide 2 — The Problem
+- Crypto markets: 24/7, no human can stay sharp that long
+- Traditional bot = fixed rulebook: fast, predictable, cheap
+- Limitation: blind to anything not encoded in the rule
+
+### Slide 3 — The Idea: Three Analysts in a Trading Room
+- 3 LLM analysts, same model, different jobs and different views:
+  - Numbers analyst (indicator readouts)
+  - Chart analyst (candle picture, x-ray style)
+  - Order-flow analyst (buy vs sell pressure)
+- Each writes BUY / SELL / HOLD plus a confidence
+- A non-LLM boss applies a fixed weighted formula
+- LLM does the looking, math does the deciding
+
+### Slide 4 — Hypothesis & Honest Outcome
+- Hypothesis: LLM-multi-agent can match or beat classical TA on the same data
+- Measured outcome: LLM lost money, classical won
+- Honest framing: the answer is what we measured, not what we hoped
+- Today's focus: **the data pipeline** — every transformation from API response to filled trade
 
 ---
 
-## Section 2 — Data Source & Raw API Format (4 min)
+## Section 2 — Data Source & Raw Inputs (3 min)
 
-### Slide 3 — Data Sources
+### Slide 5 — Data Sources
 - Exchange: **Binance Spot**
 - Symbol: BTC/USDT; Timeframe: 15m; Window: 2025-04-10 → 2025-04-15 (480 bars)
 - Endpoints:
   - `GET https://api.binance.com/api/v3/klines` (OHLCV + taker buy volume)
-  - `GET https://api.binance.com/api/v3/aggTrades` (optional — tick-level CVD, replaced by kline derivation for 60–200× speedup)
+  - `GET https://api.binance.com/api/v3/aggTrades` (skipped — CVD derived from klines for 60–200× speedup)
 - Code: `data/downloader.py:42` (`publicGetKlines` via ccxt)
 
-### Slide 4 — Raw Kline Response (Binance)
-- Show the 12-element array literally:
-  ```
-  [open_time_ms, "open", "high", "low", "close", "volume",
-   close_time_ms, "quote_vol", n_trades,
-   "taker_buy_base_vol", "taker_buy_quote_vol", "ignore"]
-  ```
-- Note: all prices/volumes are returned as **JSON strings**, not numbers.
-- We retain 7 fields: `timestamp, open, high, low, close, volume, taker_buy_volume`.
+### Slide 6 — What Binance Gives Us (Raw Kline)
+- 12-element JSON array per candle; prices/volumes are JSON strings (cast at `downloader.py:113`)
+- We keep 7 fields: `timestamp, open, high, low, close, volume, taker_buy_volume`
+- We drop 5: `close_time, quote_vol, n_trades, taker_buy_quote, ignore`
 
-### Slide 5 — Why `taker_buy_volume` Matters (CVD Derivation)
+### Slide 7 — Why `taker_buy_volume` Matters (CVD Derivation)
 - CVD = Cumulative Volume Delta = cumulative (buy aggressor − sell aggressor)
 - Identity: `volume = taker_buy + taker_sell` and `cvd_delta = taker_buy − taker_sell`
 - Therefore: `cvd_delta = 2 × taker_buy_volume − volume`
-- Avoids downloading millions of aggTrades (60–200× faster).
+- Avoids downloading millions of aggTrades (60–200× faster)
 - Code: `data/cvd.py:50` `cvd_from_klines`
 
-### Slide 6 — Final `Bar` Object Schema
+### Slide 8 — Final `Bar` Object Schema
 - After preprocessing, the engine consumes a stream of `Bar` dataclasses:
   ```python
   Bar(timestamp, open, high, low, close,
@@ -58,12 +68,12 @@ Language-neutral structure. Both `script_en.md` and `script_id.md` index against
 
 ## Section 3 — Preprocessing & Indicator Transformations (5 min)
 
-### Slide 7 — Warmup Discipline
+### Slide 9 — Warmup Discipline
 - Both strategies require **60 bars** of warmup before any signal is emitted.
 - Why: MACD(12,26,9) hist is first non-NaN at bar 34; SuperTrend(10,3) needs ~10 bars of ATR seasoning; EMA(50) needs 50.
 - Constant: `WARMUP = 60` (`strategies/traditional.py:38`, `strategies/llm_agents/strategy.py:39`).
 
-### Slide 8 — Indicator Set
+### Slide 10 — Indicator Set
 | Indicator | Params | Purpose | Used by |
 |---|---|---|---|
 | EMA | 12, 26 (LLM) / 20, 50 (Trad) | Trend direction | both |
@@ -73,7 +83,7 @@ Language-neutral structure. Both `script_en.md` and `script_id.md` index against
 | SuperTrend | length=10, multiplier=3 | Trailing stop + regime sign | both |
 | CVD | derived from kline | Order-flow pressure | LLM only |
 
-### Slide 9 — SuperTrend Up Close
+### Slide 11 — SuperTrend Up Close
 - Formula: `hl2 ± multiplier × ATR(10)`, with carry-forward trailing rule
 - Two outputs:
   - `st` — the stop-line price level
@@ -81,7 +91,7 @@ Language-neutral structure. Both `script_en.md` and `script_id.md` index against
 - Used as **both** the stop-loss level **and** a regime gate
 - Code: `indicators/ta.py:124`
 
-### Slide 10 — Transformation Pipeline Diagram
+### Slide 12 — Transformation Pipeline Diagram
 ```
 Binance REST  ──►  kline JSON (12-col array)
                     │  ccxt publicGetKlines, 1000-row pages
@@ -102,7 +112,7 @@ Binance REST  ──►  kline JSON (12-col array)
 
 ## Section 4 — Traditional Bot: Data → Signal → Trade (4 min)
 
-### Slide 11 — The Rulebook (Transparent on Purpose)
+### Slide 13 — The Rulebook (Transparent on Purpose)
 ```
 if ADX(14) > 20:
     if EMA20>EMA50 and MACD_hist>0 and RSI<70 and ST_dir==+1:
@@ -115,7 +125,7 @@ else: HOLD
 - 100% deterministic. Same bar → same signal, every time.
 - Code: `strategies/traditional.py:47`
 
-### Slide 12 — Signal Object
+### Slide 14 — Signal Object
 ```python
 Signal(action=Action.BUY,
        confidence=0.42,        # = clip((ADX-20)/30, 0, 1)
@@ -124,7 +134,7 @@ Signal(action=Action.BUY,
 ```
 - The strategy is **sizing-agnostic** — it emits price + stop only; the engine handles risk-sizing.
 
-### Slide 13 — Signal → Trade (Engine)
+### Slide 15 — Signal → Trade (Engine)
 1. `broker.check_stops(bar)` — close at stop if `low ≤ stop` (long) or `high ≥ stop` (short)
 2. `broker.fill_pending(bar)` — last bar's order fills at **this bar's open + slippage**
 3. `strategy.on_bar(bar, ctx)` — emit new `Signal`
@@ -138,7 +148,7 @@ Signal(action=Action.BUY,
 
 ## Section 5 — LLM Bot: Features → 3 Agents → Consensus → Trade (6 min)
 
-### Slide 14 — Why Multi-Agent (Not Single-LLM)?
+### Slide 16 — Why Multi-Agent (Not Single-LLM)?
 - Three specialised analysts with disjoint information:
   - **Technical** — sees indicator scalars only
   - **QABBA** — sees order-flow scalars only
@@ -147,7 +157,7 @@ Signal(action=Action.BUY,
 - Topology: `START → {technical, visual, qabba} → decision → END` (LangGraph, parallel fan-out)
 - Code: `strategies/llm_agents/graph.py:45`
 
-### Slide 15 — Feature Extraction (per bar)
+### Slide 17 — Feature Extraction (per bar)
 - After warmup (60 bars), `LLMAgentStrategy.on_bar` computes:
   ```python
   features = {
@@ -163,7 +173,7 @@ Signal(action=Action.BUY,
 - Chart PNG: last 60 bars rendered by `mplfinance` (Agg backend), base64-encoded.
 - Code: `strategies/llm_agents/strategy.py:91`, `chart.py:26`
 
-### Slide 16 — Per-Agent Prompts (literal templates)
+### Slide 18 — Per-Agent Prompts (literal templates)
 - **Technical** (`prompts.py:34`):
   > "You are a technical analyst. Given these indicator readings, output one of BUY, SELL, HOLD followed by a confidence in [0,1] and a one-line rationale. Format: `<ACTION> <CONFIDENCE> <RATIONALE>`. Features: ema_fast=84321.12 ema_slow=83998.40 rsi=58.1 macd_hist=12.3 adx=24.4"
 - **QABBA** (`prompts.py:45`):
@@ -171,7 +181,7 @@ Signal(action=Action.BUY,
 - **Visual** (`prompts.py:59`):
   > "You are a chart-pattern analyst. Examine the attached candlestick chart and..." (+ PNG attached as `data:image/png;base64,...`)
 
-### Slide 17 — Real Cached Responses (one bar)
+### Slide 19 — Real Cached Responses (one bar)
 ```json
 // technical
 {"content": "HOLD 0.62 EMA crossover signals are weak with
@@ -194,7 +204,7 @@ Signal(action=Action.BUY,
 ```
 - Parser extracts `<ACTION> <CONFIDENCE>` via regex (`nodes/_parse.py:16`).
 
-### Slide 18 — Decision Math (deterministic, no LLM)
+### Slide 20 — Decision Math (deterministic, no LLM)
 - Weights (from `config.yaml`): **QABBA = 0.40, Visual = 0.35, Technical = 0.25**
 - Per side: `score(side) = Σ wᵢ × confᵢ` for analysts voting that side
 - Threshold = **0.35**
@@ -203,7 +213,7 @@ Signal(action=Action.BUY,
   - `sell_score = 0.40 × 0.72 + 0.35 × 0.72 = 0.540` → exceeds 0.35 → **SELL**
 - Code: `strategies/llm_agents/nodes/decision.py:33`
 
-### Slide 19 — Regime Gate + Stop Placement
+### Slide 21 — Regime Gate + Stop Placement
 - SuperTrend gate (re-audit C3 fix, `strategy.py:184`):
   - If consensus = BUY but `st_dir = −1` (line above price) → emit **HOLD** instead
   - If consensus = SELL but `st_dir = +1` (line below price) → emit **HOLD**
@@ -215,7 +225,7 @@ Signal(action=Action.BUY,
 
 ## Section 6 — Live Demo (3 min)
 
-### Slide 20 — Live Cache-Replay
+### Slide 22 — Live Cache-Replay
 - Run `main.py` against committed LLM cache (1,263 responses, no network, ~30s)
 - Cache key = `(model, agent, prompt_hash, image_hash, bar_timestamp_ms)`
 - Watch Rich TUI: per-bar signal, equity curves, win%, MDD
@@ -225,7 +235,7 @@ Signal(action=Action.BUY,
 
 ## Section 7 — Results (3 min)
 
-### Slide 21 — Headline Numbers
+### Slide 23 — Headline Figures
 | Metric | Traditional | LLM |
 |---|---|---|
 | Return | **+3.07%** | **−6.20%** |
@@ -236,13 +246,13 @@ Signal(action=Action.BUY,
 | Sharpe | +0.40 | −0.71 |
 - Run: `results/runs/20260516T215247Z/`
 
-### Slide 22 — Loss Attribution
+### Slide 24 — Loss Attribution
 - LLM BUY trades: 5 × +$22 total
 - LLM SELL trades: 5 × **−$642 total**
 - Market trended **80,800 → 85,500** (uptrend). The LLM repeatedly faded the trend.
 - Traditional held one BUY for 200 bars and captured **+4.42%**; LLM avg hold = 37 bars (over-trades by 2.5×).
 
-### Slide 23 — Why? Three Honest Hypotheses
+### Slide 25 — Why? Three Honest Hypotheses
 1. **CVD over-weighted (0.40)** — short-term order flow contradicted trend in a way the decision math couldn't override.
 2. **SuperTrend(10,3) regime gate too jittery** — flips on intra-bar noise; longer-horizon filter would help.
 3. **No fee/slippage in the LLM's reasoning** — the LLM doesn't know trades cost 6 bps; the engine fee-discounted sizing, not the LLM.
@@ -251,7 +261,7 @@ Signal(action=Action.BUY,
 
 ## Section 8 — Conclusion + Q&A (2 min)
 
-### Slide 24 — Contribution + Open Questions
+### Slide 26 — Contribution + Open Questions
 - **Contribution**: an open, reproducible, byte-deterministic comparison harness (cache replay → same numbers forever)
 - LLM losing IS a finding — it scopes where LLMs do and don't help
 - Open questions for the room:

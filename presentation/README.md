@@ -8,23 +8,23 @@ The presentation is reframed for an **Advanced Data Analysis** audience: most of
 
 | File | Purpose |
 |---|---|
-| `slide_outline.md` | Slide-by-slide structure (24 slides, language-neutral) |
+| `slide_outline.md` | Slide-by-slide structure (26 slides, language-neutral) |
 | `script_en.md` | English delivery script with time anchors and slide markers |
-| `script_id.md` | Indonesian script (semi-formal, BI baku + EN technical terms) |
+| `script_id.md` | Indonesian script (conversational-akademik, BI + EN technical terms) |
 | `demo_cheatsheet.md` | Exact commands for the live cache-replay demo, contingency plan |
 
 ## Time Allocation (30 minutes) — Data-Pipeline-Heavy
 
 | # | Section | Slides | Time | Cum. |
 |---|---|---|---|---|
-| 1 | Intro & problem statement | 1–2 | 3 min | 03:00 |
-| 2 | Data source & raw API format | 3–6 | 4 min | 07:00 |
-| 3 | Preprocessing & indicator transformations | 7–10 | 5 min | 12:00 |
-| 4 | Traditional bot: data → signal → trade | 11–13 | 4 min | 16:00 |
-| 5 | LLM bot: features → 3 agents → consensus → trade | 14–19 | 6 min | 22:00 |
-| 6 | Live cache-replay demo | 20 | 3 min | 25:00 |
-| 7 | Results — comparative finding | 21–23 | 3 min | 28:00 |
-| 8 | Honest conclusion + Q&A | 24 | 2 min | 30:00 |
+| 1 | Context, problem & hypothesis | 1–4 | 4 min | 04:00 |
+| 2 | Data source & raw inputs | 5–8 | 3 min | 07:00 |
+| 3 | Preprocessing & indicator transformations | 9–12 | 5 min | 12:00 |
+| 4 | Traditional bot: data → signal → trade | 13–15 | 4 min | 16:00 |
+| 5 | LLM bot: features → 3 agents → consensus → trade | 16–21 | 6 min | 22:00 |
+| 6 | Live cache-replay demo | 22 | 3 min | 25:00 |
+| 7 | Results — comparative finding | 23–25 | 3 min | 28:00 |
+| 8 | Honest conclusion + Q&A | 26 | 2 min | 30:00 |
 
 ## Delivery Format
 
