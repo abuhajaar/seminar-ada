@@ -168,6 +168,7 @@ def run(
             end=cfg.run.end,
             initial_balance=cfg.run.initial_balance,
             out_dir=out_dir,
+            dump_bar_artifacts=cfg.run.dump_bar_artifacts,
         ),
         execution=SimpleNamespace(
             taker_fee_bps=cfg.execution.taker_fee_bps,
@@ -262,6 +263,7 @@ def run(
                 wf_cfg.run.assets, bars_loader, build_strategies, wf_cfg,
                 run_state_factory=rsf,
                 on_progress=_on_progress,
+                dump_bar_artifacts=wf_cfg.run.dump_bar_artifacts,
             )
         # Live ticker reads through the proxy; engine writes to whichever
         # RunState run_state_factory just minted.
@@ -272,6 +274,7 @@ def run(
                 wf_cfg.run.assets, bars_loader, build_strategies, wf_cfg,
                 run_state_factory=rsf,
                 on_progress=_on_progress,
+                dump_bar_artifacts=wf_cfg.run.dump_bar_artifacts,
             )
         finally:
             await ui.stop_live()

@@ -8,9 +8,12 @@ I/O. The heuristic bot returns immediately; the engine awaits both via
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
 from core.types import Bar, Signal
+
+if TYPE_CHECKING:
+    from core.bar_artifacts import BarArtifactSink
 
 
 @dataclass(frozen=True)
@@ -20,6 +23,8 @@ class Context:
     equity: float
     risk_pct: float
     in_position: bool
+    bar_index: int | None = None
+    artifact_sink: "BarArtifactSink | None" = None
 
 
 class Strategy(Protocol):

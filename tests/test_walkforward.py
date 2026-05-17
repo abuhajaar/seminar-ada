@@ -344,3 +344,72 @@ async def test_walkforward_propagates_unexpected_errors():
 
     with pytest.raises(ValueError, match="bug in strategy code"):
         await walkforward.run(cfg.run.assets, loader, build, cfg)
+
+
+async def test_walkforward_dumps_bar_artifacts_when_flag_on(tmp_path: Path):
+    """When dump_bar_artifacts=True and out_dir is set, per-bar folders appear.
+
+    Uses a 65-bar synthetic series plus an LLMAgentStrategy(MockClient) so the
+    LLM leg clears its WARMUP_BARS=60 gate and writes decision_output.json on
+    the final bar. Width = len(str(65)) = 2 → "01".."65".
+    """
+    from llm.client import MockClient
+    from strategies.llm_agents.strategy import LLMAgentStrategy
+
+    cfg = SimpleNamespace(
+        run=SimpleNamespace(
+            assets=["A/USDT"],
+            timeframe="1h",
+            out_dir=tmp_path,
+            initial_balance=10_000.0,
+        ),
+        execution=SimpleNamespace(
+            taker_fee_bps=4.0,
+            slippage_bps=2.0,
+            risk_pct=0.02,
+        ),
+    )
+    a_bars = _make_bars(n=65, seed=1)
+
+    def loader(symbol: str):
+        return a_bars
+
+    def build(_symbol: str):
+        return (
+            TraditionalStrategy(),
+            LLMAgentStrategy(
+                client=MockClient(),
+                model="mock",
+                image_window_bars=30,
+                render_image=True,
+            ),
+        )
+
+    await walkforward.run(
+        cfg.run.assets, loader, build, cfg,
+        dump_bar_artifacts=True,
+    )
+
+    runs_root = tmp_path / "runs"
+    run_dirs = list(runs_root.iterdir())
+    assert len(run_dirs) == 1
+    bars_root = run_dirs[0] / "A_USDT" / "bars"
+    assert (bars_root / "01" / "input_indicators.json").exists()
+    assert (bars_root / "65" / "decision_output.json").exists()
+
+
+async def test_walkforward_does_not_dump_artifacts_when_flag_off(tmp_path: Path):
+    """Default off: no bars/ folder under the asset dir even with out_dir set."""
+    cfg = _make_cfg(out_dir=tmp_path)
+    loader = _bars_loader_factory()
+
+    await walkforward.run(
+        cfg.run.assets, loader, _build_strategies, cfg,
+    )
+
+    runs_root = tmp_path / "runs"
+    run_dir = next(iter(runs_root.iterdir()))
+    for sym in cfg.run.assets:
+        safe = sym.replace("/", "_")
+        assert not (run_dir / safe / "bars").exists()
+

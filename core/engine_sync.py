@@ -18,6 +18,7 @@ dual-strategy engine is sub-plan D; this is the validation harness.
 from __future__ import annotations
 
 from collections.abc import Iterable
+from pathlib import Path
 
 from core.broker import Broker, _fee
 from core.metrics import MetricsDict, compute_metrics
@@ -97,6 +98,8 @@ async def run_sync(
     taker_fee_bps: float,
     slippage_bps: float,
     risk_pct: float,
+    artifact_root: Path | None = None,
+    total_bars: int | None = None,
 ) -> tuple[Portfolio, MetricsDict]:
     portfolio = Portfolio(initial_balance=initial_balance)
     broker = Broker(
@@ -107,7 +110,7 @@ async def run_sync(
     bar_count = 0
     last_bar: Bar | None = None
 
-    for bar in bars:
+    for bar_idx, bar in enumerate(bars, start=1):
         bar_count += 1
         last_bar = bar
         # 1. Check stops on the freshly-opened bar (uses high/low).
@@ -115,12 +118,22 @@ async def run_sync(
         # 2. Fill any pending order at this bar's open.
         broker.fill_pending(bar)
 
+        sink = None
+        if artifact_root is not None and total_bars is not None:
+            from core.bar_artifacts import BarArtifactSink, bar_folder_name
+
+            sink = BarArtifactSink(
+                artifact_root / bar_folder_name(bar_idx, total=total_bars)
+            )
+
         # 3. Strategy sees the bar and emits a Signal.
         ctx = Context(
             symbol=symbol,
             equity=portfolio.equity(mark_price=bar.close),
             risk_pct=risk_pct,
             in_position=portfolio.position is not None,
+            bar_index=bar_idx,
+            artifact_sink=sink,
         )
         signal = await strategy.on_bar(bar, ctx)
 

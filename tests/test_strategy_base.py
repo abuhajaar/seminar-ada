@@ -49,3 +49,25 @@ async def test_dummy_strategy_satisfies_protocol():
     ctx = Context(symbol="BTC/USDT", equity=10_000.0, risk_pct=0.02, in_position=False)
     sig = await d.on_bar(bar, ctx)
     assert sig.action is Action.HOLD
+
+
+def test_context_optional_artifact_fields_default_none():
+    ctx = Context(symbol="BTC/USDT", equity=10_000.0, risk_pct=0.02, in_position=False)
+    assert ctx.bar_index is None
+    assert ctx.artifact_sink is None
+
+
+def test_context_accepts_artifact_fields(tmp_path):
+    from core.bar_artifacts import BarArtifactSink
+
+    sink = BarArtifactSink(tmp_path / "0001")
+    ctx = Context(
+        symbol="BTC/USDT",
+        equity=10_000.0,
+        risk_pct=0.02,
+        in_position=False,
+        bar_index=1,
+        artifact_sink=sink,
+    )
+    assert ctx.bar_index == 1
+    assert ctx.artifact_sink is sink

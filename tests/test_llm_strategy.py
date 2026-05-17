@@ -472,3 +472,51 @@ async def test_buy_in_up_regime_still_emits_long_signal() -> None:
     assert last.action is Action.BUY
     assert last.stop_loss is not None
     assert last.stop_loss < last_bar.close
+
+@pytest.mark.asyncio
+async def test_llm_strategy_dumps_artifacts_when_sink_provided(tmp_path):
+    import json
+    from core.bar_artifacts import BarArtifactSink
+
+    strat = LLMAgentStrategy(
+        client=MockClient(),
+        model="mock",
+        image_window_bars=30,
+        render_image=True,
+        consensus_threshold=0.2,
+    )
+    # Warm up past WARMUP_BARS without a sink so warmup HOLDs don't pollute
+    # the artifact folder.
+    last_bar = None
+    for i in range(WARMUP_BARS + 4):
+        last_bar = _bar(i)
+        await strat.on_bar(last_bar, _ctx())
+
+    sink = BarArtifactSink(tmp_path / "0060")
+    final_bar = _bar(WARMUP_BARS + 5)
+    sig = await strat.on_bar(
+        final_bar,
+        Context(
+            symbol="BTC/USDT",
+            equity=10_000.0,
+            risk_pct=0.01,
+            in_position=False,
+            bar_index=WARMUP_BARS + 6,
+            artifact_sink=sink,
+        ),
+    )
+
+    folder = tmp_path / "0060"
+    # Three analyst nodes each wrote input/output via RecordingClient:
+    for agent in ("technical", "visual", "qabba"):
+        assert (folder / f"{agent}_input.txt").exists(), f"missing {agent}_input.txt"
+        assert (folder / f"{agent}_output.json").exists(), f"missing {agent}_output.json"
+    # Decision node writes its final decision separately:
+    decision = json.loads((folder / "decision_output.json").read_text(encoding="utf-8"))
+    # If regime gate did not override, action matches; otherwise sig becomes HOLD
+    # but the dumped decision keeps the consensus action.
+    if not decision.get("regime_gate_overridden", False):
+        assert decision["action"] == sig.action.value
+    # Chart PNG written by the strategy itself:
+    chart = folder / "chart.png"
+    assert chart.exists() and chart.stat().st_size > 0

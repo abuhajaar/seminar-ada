@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Iterable
+from pathlib import Path
 
 import numpy as np
 
@@ -150,6 +151,8 @@ async def run_async(
     slippage_bps: float,
     risk_pct: float,
     run_state: RunState | None = None,
+    artifact_root: Path | None = None,
+    total_bars: int | None = None,
 ) -> tuple[Portfolio, Portfolio, MetricsDict, MetricsDict]:
     portfolio_trad = Portfolio(initial_balance=initial_balance)
     portfolio_llm = Portfolio(initial_balance=initial_balance)
@@ -172,7 +175,7 @@ async def run_async(
     trad_mdd_pct = 0.0
     llm_mdd_pct = 0.0
 
-    for bar in bars:
+    for bar_idx, bar in enumerate(bars, start=1):
         bar_count += 1
         last_bar = bar
         # 1. Stops first, per leg.
@@ -182,18 +185,35 @@ async def run_async(
         broker_trad.fill_pending(bar)
         broker_llm.fill_pending(bar)
 
+        # Build per-bar artifact sinks when the seminar's dump flag is on.
+        # Both legs share the folder; file names don't collide (traditional
+        # uses input_indicators.json / output_signal.json, LLM uses
+        # <agent>_*, chart.png, decision_output.json).
+        trad_sink = None
+        llm_sink = None
+        if artifact_root is not None and total_bars is not None:
+            from core.bar_artifacts import BarArtifactSink, bar_folder_name
+
+            folder = artifact_root / bar_folder_name(bar_idx, total=total_bars)
+            trad_sink = BarArtifactSink(folder)
+            llm_sink = BarArtifactSink(folder)
+
         # 3. Build per-leg Context (equity differs).
         ctx_trad = Context(
             symbol=symbol,
             equity=portfolio_trad.equity(mark_price=bar.close),
             risk_pct=risk_pct,
             in_position=portfolio_trad.position is not None,
+            bar_index=bar_idx,
+            artifact_sink=trad_sink,
         )
         ctx_llm = Context(
             symbol=symbol,
             equity=portfolio_llm.equity(mark_price=bar.close),
             risk_pct=risk_pct,
             in_position=portfolio_llm.position is not None,
+            bar_index=bar_idx,
+            artifact_sink=llm_sink,
         )
 
         # 4. Await both signals concurrently.

@@ -38,6 +38,21 @@ MACD_HIST_EPS: float = 1e-9
 WARMUP = 60
 
 
+def _dump(ctx: Context, features: dict, signal: Signal) -> None:
+    if ctx.artifact_sink is None:
+        return
+    ctx.artifact_sink.write_json("input_indicators.json", features)
+    ctx.artifact_sink.write_json(
+        "output_signal.json",
+        {
+            "action": signal.action.value,
+            "confidence": signal.confidence,
+            "reasoning": signal.reasoning,
+            "stop_loss": signal.stop_loss,
+        },
+    )
+
+
 @dataclass
 class TraditionalStrategy:
     closes: list[float] = field(default_factory=list)
@@ -50,12 +65,14 @@ class TraditionalStrategy:
         self.lows.append(bar.low)
 
         if len(self.closes) < WARMUP:
-            return Signal(
+            sig = Signal(
                 action=Action.HOLD,
                 confidence=0.0,
                 reasoning=f"warmup {len(self.closes)}/{WARMUP}",
                 stop_loss=None,
             )
+            _dump(ctx, {"warmup": len(self.closes), "warmup_target": WARMUP}, sig)
+            return sig
 
         close = pd.Series(self.closes, dtype=float)
         high = pd.Series(self.highs, dtype=float)
@@ -70,26 +87,43 @@ class TraditionalStrategy:
         st_df = supertrend(high, low, close, length=10, multiplier=3.0)
         st_line = float(st_df["st"].iloc[-1])
         st_dir_raw = st_df["dir"].iloc[-1]
+        st_dir_val = None if pd.isna(st_dir_raw) else int(st_dir_raw)
+
+        features = {
+            "ema_fast": ema20,
+            "ema_slow": ema50,
+            "rsi": rsi_v,
+            "macd_hist": macd_hist,
+            "adx": adx_v,
+            "supertrend_line": st_line,
+            "supertrend_dir": st_dir_val,
+            "cvd": bar.cvd,
+            "cvd_delta": bar.cvd_delta,
+        }
 
         values = [rsi_v, macd_hist, adx_v, ema20, ema50, st_line]
         if any(math.isnan(v) for v in values) or pd.isna(st_dir_raw):
-            return Signal(
+            sig = Signal(
                 action=Action.HOLD,
                 confidence=0.0,
                 reasoning="indicator NaN",
                 stop_loss=None,
             )
+            _dump(ctx, features, sig)
+            return sig
 
         st_dir = int(st_dir_raw)
         confidence = float(np.clip((adx_v - 20.0) / 30.0, 0.0, 1.0))
 
         if adx_v <= 20.0:
-            return Signal(
+            sig = Signal(
                 action=Action.HOLD,
                 confidence=confidence,
                 reasoning=f"ADX={adx_v:.1f}<=20 (no trend)",
                 stop_loss=None,
             )
+            _dump(ctx, features, sig)
+            return sig
 
         # MACD-hist epsilon: see ``MACD_HIST_EPS`` module-level constant for
         # the rationale (synthetic linear ramps collapse hist to ~1e-14).
@@ -118,7 +152,7 @@ class TraditionalStrategy:
         )
 
         if long_ok:
-            return Signal(
+            sig = Signal(
                 action=Action.BUY,
                 confidence=confidence,
                 reasoning=(
@@ -127,8 +161,8 @@ class TraditionalStrategy:
                 ),
                 stop_loss=st_line,
             )
-        if short_ok:
-            return Signal(
+        elif short_ok:
+            sig = Signal(
                 action=Action.SELL,
                 confidence=confidence,
                 reasoning=(
@@ -137,9 +171,12 @@ class TraditionalStrategy:
                 ),
                 stop_loss=st_line,
             )
-        return Signal(
-            action=Action.HOLD,
-            confidence=confidence,
-            reasoning=f"no confluence (RSI={rsi_v:.1f}, MACDh={macd_hist:.3f})",
-            stop_loss=None,
-        )
+        else:
+            sig = Signal(
+                action=Action.HOLD,
+                confidence=confidence,
+                reasoning=f"no confluence (RSI={rsi_v:.1f}, MACDh={macd_hist:.3f})",
+                stop_loss=None,
+            )
+        _dump(ctx, features, sig)
+        return sig

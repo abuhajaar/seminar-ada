@@ -58,6 +58,7 @@ async def run(
     *,
     run_state_factory: Callable[[str], RunState] | None = None,
     on_progress: Callable[[str, int, int], None] | None = None,
+    dump_bar_artifacts: bool = False,
 ) -> dict[str, dict[str, Any]]:
     """Run the dual-strategy engine over every asset in ``assets``.
 
@@ -103,6 +104,11 @@ async def run(
         llm_port = None
 
         try:
+            artifact_root = None
+            total_bars_for_artifacts = None
+            if dump_bar_artifacts and run_dir is not None:
+                artifact_root = run_dir / _safe_symbol(symbol) / "bars"
+                total_bars_for_artifacts = len(bars)
             trad_port, llm_port, trad_metrics, llm_metrics = await engine.run_async(
                 bars=iter(bars),
                 trad_strategy=trad_strategy,
@@ -113,6 +119,8 @@ async def run(
                 slippage_bps=slippage_bps,
                 risk_pct=risk_pct,
                 run_state=run_state,
+                artifact_root=artifact_root,
+                total_bars=total_bars_for_artifacts,
             )
         except BudgetExceededError as e:
             # engine.run_async raised before returning portfolios, so both

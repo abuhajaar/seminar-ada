@@ -103,3 +103,34 @@ async def test_signal_confidence_in_unit_interval():
     for b in bars:
         sig = await s.on_bar(b, _flat_ctx())
         assert 0.0 <= sig.confidence <= 1.0
+
+@pytest.mark.asyncio
+async def test_traditional_dumps_artifacts_when_sink_provided(tmp_path):
+    import json
+    from core.bar_artifacts import BarArtifactSink
+
+    s = TraditionalStrategy()
+    closes = list(np.linspace(100.0, 200.0, 70))
+    bars = _make_bars(closes)
+    for b in bars[:-1]:
+        await s.on_bar(b, _flat_ctx())
+
+    sink = BarArtifactSink(tmp_path / "0070")
+    final_bar = bars[-1]
+    sig = await s.on_bar(
+        final_bar,
+        Context(
+            symbol="BTC/USDT",
+            equity=10000.0,
+            risk_pct=0.02,
+            in_position=False,
+            bar_index=70,
+            artifact_sink=sink,
+        ),
+    )
+
+    indicators = json.loads((tmp_path / "0070" / "input_indicators.json").read_text(encoding="utf-8"))
+    signal = json.loads((tmp_path / "0070" / "output_signal.json").read_text(encoding="utf-8"))
+    assert set(indicators.keys()) >= {"ema_fast", "ema_slow", "rsi", "macd_hist", "adx"}
+    assert signal["action"] in {"BUY", "SELL", "HOLD"}
+    assert signal["action"] == sig.action.value

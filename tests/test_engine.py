@@ -279,3 +279,40 @@ def test_engine_requires_two_bars():
             taker_fee_bps=TAKER_FEE_BPS, slippage_bps=SLIPPAGE_BPS,
             risk_pct=RISK_PCT,
         ))
+
+@pytest.mark.asyncio
+async def test_engine_wires_artifact_sink_when_run_dir_set(tmp_path):
+    """Engine builds per-bar sinks and threads them through Context.
+
+    Width = len(str(65)) = 2, so bar 1 → "01", bar 65 → "65".
+    Traditional dumps on every bar (including warmup); LLM dumps only past
+    its WARMUP_BARS=60 gate.
+    """
+    from llm.client import MockClient
+    from strategies.llm_agents.strategy import LLMAgentStrategy
+
+    bars = _make_bars(n=65)
+    trad = TraditionalStrategy()
+    llm = LLMAgentStrategy(
+        client=MockClient(), model="mock", image_window_bars=30, render_image=True,
+    )
+
+    run_dir = tmp_path / "run"
+    await run_async(
+        bars=iter(bars),
+        trad_strategy=trad,
+        llm_strategy=llm,
+        symbol=SYMBOL,
+        initial_balance=INITIAL_BALANCE,
+        taker_fee_bps=TAKER_FEE_BPS,
+        slippage_bps=SLIPPAGE_BPS,
+        risk_pct=RISK_PCT,
+        artifact_root=run_dir / "BTCUSDT" / "bars",
+        total_bars=65,
+    )
+
+    # Traditional writes input_indicators.json on every bar (warmup payload is
+    # the {"warmup": k, "warmup_target": 60} placeholder).
+    assert (run_dir / "BTCUSDT" / "bars" / "01" / "input_indicators.json").exists()
+    # LLM decision dump only appears after WARMUP_BARS — pick the last bar.
+    assert (run_dir / "BTCUSDT" / "bars" / "65" / "decision_output.json").exists()
