@@ -1,4 +1,4 @@
-"""Loader: read OHLCV CSV + CVD parquet from disk, yield Bar objects."""
+"""Loader: read OHLCV CSV + CVD CSV from disk, yield Bar objects."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ import pytest
 
 from core.types import Bar
 from data.loader import load_bars
-from data.paths import cvd_parquet_path, ohlcv_csv_path
+from data.paths import cvd_csv_path, ohlcv_csv_path
 
 
 def _seed(tmp_path: Path):
@@ -30,7 +30,7 @@ def _seed(tmp_path: Path):
     ohlcv.to_csv(op, index=False)
 
     # Post-kline-CVD pipeline: `taker_buy_volume` is canonical in OHLCV; the
-    # CVD parquet still emits it for backward-compat with `aggregate_cvd`
+    # CVD CSV still emits it for backward-compat with `aggregate_cvd`
     # output, but the loader treats OHLCV as the source of truth.
     cvd = pd.DataFrame(
         {
@@ -40,9 +40,9 @@ def _seed(tmp_path: Path):
             "taker_buy_volume": [6.0, 4.5, 7.5, 6.0],
         }
     )
-    cp = cvd_parquet_path("BTC/USDT", "1h", root=tmp_path)
+    cp = cvd_csv_path("BTC/USDT", "1h", root=tmp_path)
     cp.parent.mkdir(parents=True, exist_ok=True)
-    cvd.to_parquet(cp, index=False)
+    cvd.to_csv(cp, index=False)
 
 
 def test_load_bars_yields_bars(tmp_path: Path):
@@ -81,10 +81,10 @@ def test_load_bars_filters_window(tmp_path: Path):
 def test_load_bars_misaligned_raises(tmp_path: Path):
     _seed(tmp_path)
     # Corrupt CVD: shift one timestamp
-    cp = cvd_parquet_path("BTC/USDT", "1h", root=tmp_path)
-    cvd = pd.read_parquet(cp)
+    cp = cvd_csv_path("BTC/USDT", "1h", root=tmp_path)
+    cvd = pd.read_csv(cp, parse_dates=["timestamp"])
     cvd.loc[2, "timestamp"] = pd.Timestamp("2025-04-01 02:30", tz="UTC")
-    cvd.to_parquet(cp, index=False)
+    cvd.to_csv(cp, index=False)
     with pytest.raises(ValueError, match="alignment"):
         list(
             load_bars(
@@ -98,7 +98,7 @@ def test_load_bars_misaligned_raises(tmp_path: Path):
 def test_load_bars_works_when_ohlcv_also_has_taker_buy_volume(tmp_path: Path):
     """Post-kline-CVD pipeline: OHLCV CSV now also carries `taker_buy_volume`.
 
-    The CVD parquet still emits it (legacy from aggregate_cvd). The loader's
+    The CVD CSV still emits it (legacy from aggregate_cvd). The loader's
     merge must not crash on the duplicate column.
     """
     ohlcv = pd.DataFrame(
@@ -124,9 +124,9 @@ def test_load_bars_works_when_ohlcv_also_has_taker_buy_volume(tmp_path: Path):
             "taker_buy_volume":  [ 6.0,  8.0],
         }
     )
-    cp = cvd_parquet_path("BTC/USDT", "1h", root=tmp_path)
+    cp = cvd_csv_path("BTC/USDT", "1h", root=tmp_path)
     cp.parent.mkdir(parents=True, exist_ok=True)
-    cvd.to_parquet(cp, index=False)
+    cvd.to_csv(cp, index=False)
 
     bars = list(
         load_bars(
