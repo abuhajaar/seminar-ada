@@ -155,6 +155,16 @@ class LLMAgentStrategy:
             window = list(self._bars)[-self.image_window_bars :]
             image_b64 = render_chart(window)
 
+        # When an artifact sink is attached, persist the chart bytes as the
+        # canonical per-bar exhibit (separate from `visual_input.png` which is
+        # written by `RecordingClient` next to its prompt — both contain the
+        # same bytes, but `chart.png` is the strategy-owned name used by the
+        # seminar's audit folder layout).
+        if ctx.artifact_sink is not None and image_b64 is not None:
+            import base64 as _b64
+
+            ctx.artifact_sink.write_bytes("chart.png", _b64.b64decode(image_b64))
+
         # `bar_ts` is ms-since-epoch (cache key, spec Q2). `Bar.timestamp` is
         # tz-aware `datetime`; convert at the boundary so downstream nodes see
         # a plain int.
@@ -170,9 +180,26 @@ class LLMAgentStrategy:
             "qabba": None,
             "decision": None,
         }
+        # Rebuild the graph when a sink is active so each analyst node's
+        # `LLMClient.complete` call lands in the sink via the `RecordingClient`
+        # wrapper. The compiled graph captures the client via `functools.partial`
+        # at build time, so we cannot rewire the existing `_graph`. This rebuild
+        # is microsecond-scale pure Python and only fires when artifacts are
+        # being dumped (seminar demo); production runs are unaffected.
+        graph = self._graph
+        if ctx.artifact_sink is not None:
+            from llm.recording import RecordingClient
+
+            recording_client = RecordingClient(inner=self.client, sink=ctx.artifact_sink)
+            graph = build_graph(
+                client=recording_client,
+                consensus_weights=self.consensus_weights,
+                consensus_threshold=self.consensus_threshold,
+            )
+
         # `_graph` is always set by `__post_init__`; the Optional annotation is
         # only to satisfy the dataclass field default. Hence the union-attr ignore.
-        final = await self._graph.ainvoke(initial)  # type: ignore[union-attr]
+        final = await graph.ainvoke(initial)  # type: ignore[union-attr]
         d = final["decision"]
         # Side-aware regime gate (re-audit C3): reject BUY in a down-regime
         # and SELL in an up-regime. Without this, `st_line` would be a
@@ -186,6 +213,17 @@ class LLMAgentStrategy:
             or (d.action is Action.SELL and st_dir == 1)
         ):
             regime = "up" if st_dir == 1 else "down"
+            if ctx.artifact_sink is not None:
+                ctx.artifact_sink.write_json(
+                    "decision_output.json",
+                    {
+                        "action": d.action.value,
+                        "confidence": d.confidence,
+                        "rationale": d.rationale,
+                        "regime_gate_st_dir": st_dir,
+                        "regime_gate_overridden": True,
+                    },
+                )
             return Signal(
                 action=Action.HOLD,
                 confidence=d.confidence,
@@ -201,6 +239,17 @@ class LLMAgentStrategy:
         # so without this the bot can never enter (historical bug: zero LLM
         # trades across every run prior to this fix).
         stop_loss = st_line if d.action in (Action.BUY, Action.SELL) else None
+        if ctx.artifact_sink is not None:
+            ctx.artifact_sink.write_json(
+                "decision_output.json",
+                {
+                    "action": d.action.value,
+                    "confidence": d.confidence,
+                    "rationale": d.rationale,
+                    "regime_gate_st_dir": st_dir,
+                    "regime_gate_overridden": False,
+                },
+            )
         return Signal(
             action=d.action,
             confidence=d.confidence,
