@@ -4,6 +4,7 @@ run:
   start: 2025-04-10
   end:   2025-04-15
   initial_balance: 10000
+  dump_bar_artifacts: false
 
 execution:
   fill: next_bar_open

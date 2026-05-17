@@ -16,6 +16,7 @@ class RunCfg(BaseModel):
     start: date
     end: date
     initial_balance: float
+    dump_bar_artifacts: bool = False
 
 
 class ExecutionCfg(BaseModel):
