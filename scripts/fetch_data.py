@@ -25,7 +25,7 @@ import pandas as pd  # noqa: E402
 from core.config import load_config  # noqa: E402
 from data.cvd import cvd_from_klines  # noqa: E402
 from data.downloader import download_ohlcv  # noqa: E402
-from data.paths import DEFAULT_ROOT, cvd_parquet_path, ohlcv_csv_path  # noqa: E402
+from data.paths import DEFAULT_ROOT, cvd_csv_path, ohlcv_csv_path  # noqa: E402
 
 
 def main() -> int:
@@ -54,13 +54,13 @@ def main() -> int:
         print(f"    -> {ohlcv_path}")
 
         print("  CVD (derived from klines) ...")
-        cvd_out = cvd_parquet_path(sym, timeframe, root=root)
+        cvd_out = cvd_csv_path(sym, timeframe, root=root)
         cvd_out.parent.mkdir(parents=True, exist_ok=True)
         ohlcv_df = pd.read_csv(ohlcv_csv_path(sym, timeframe, root=root), parse_dates=["timestamp"])
         if ohlcv_df["timestamp"].dt.tz is None:
             ohlcv_df["timestamp"] = ohlcv_df["timestamp"].dt.tz_localize("UTC")
         cvd_df = cvd_from_klines(ohlcv_df)
-        cvd_df.to_parquet(cvd_out, index=False)
+        cvd_df.to_csv(cvd_out, index=False)
         print(f"    -> {cvd_out}  ({len(cvd_df)} bars)")
 
     print("\nDone.")
