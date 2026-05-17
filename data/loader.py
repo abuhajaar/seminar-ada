@@ -1,4 +1,4 @@
-"""Stream Bar objects by joining OHLCV + CVD parquets on timestamp."""
+"""Stream Bar objects by joining OHLCV + CVD CSVs on timestamp."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from pathlib import Path
 import pandas as pd
 
 from core.types import Bar
-from data.paths import DEFAULT_ROOT, cvd_parquet_path, ohlcv_csv_path
+from data.paths import DEFAULT_ROOT, cvd_csv_path, ohlcv_csv_path
 
 
 def _to_utc_dt(d: date) -> datetime:
@@ -29,7 +29,7 @@ def load_bars(
     Misalignment raises `ValueError` to surface bugs in the data pipeline.
     """
     ohlcv_path = ohlcv_csv_path(symbol, timeframe, root=root)
-    cvd_path = cvd_parquet_path(symbol, timeframe, root=root)
+    cvd_path = cvd_csv_path(symbol, timeframe, root=root)
     if not ohlcv_path.exists():
         raise FileNotFoundError(f"OHLCV not found at {ohlcv_path}")
     if not cvd_path.exists():
@@ -38,7 +38,7 @@ def load_bars(
     ohlcv = pd.read_csv(ohlcv_path, parse_dates=["timestamp"])
     if ohlcv["timestamp"].dt.tz is None:
         ohlcv["timestamp"] = ohlcv["timestamp"].dt.tz_localize("UTC")
-    cvd = pd.read_parquet(cvd_path)
+    cvd = pd.read_csv(cvd_path, parse_dates=["timestamp"])
     if cvd["timestamp"].dt.tz is None:
         cvd["timestamp"] = cvd["timestamp"].dt.tz_localize("UTC")
 

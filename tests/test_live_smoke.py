@@ -17,7 +17,7 @@ import pytest
 from data.cvd import aggregate_cvd
 from data.downloader import download_aggtrades, download_ohlcv
 from data.loader import load_bars
-from data.paths import aggtrades_parquet_path, cvd_parquet_path
+from data.paths import aggtrades_parquet_path, cvd_csv_path
 
 pytestmark = pytest.mark.skipif(
     os.environ.get("RUN_LIVE_TESTS") != "1",
@@ -35,9 +35,9 @@ def test_pipeline_end_to_end(tmp_path: Path):
 
     trades = pd.read_parquet(aggtrades_parquet_path(symbol, root=tmp_path))
     cvd_df = aggregate_cvd(trades, timeframe=tf)
-    cvd_path = cvd_parquet_path(symbol, tf, root=tmp_path)
+    cvd_path = cvd_csv_path(symbol, tf, root=tmp_path)
     cvd_path.parent.mkdir(parents=True, exist_ok=True)
-    cvd_df.to_parquet(cvd_path, index=False)
+    cvd_df.to_csv(cvd_path, index=False)
 
     bars = list(load_bars(symbol, tf, start, end, root=tmp_path))
     assert len(bars) == 24

@@ -23,5 +23,5 @@ def aggtrades_parquet_path(symbol: str, root: Path = DEFAULT_ROOT) -> Path:
     return root / "aggtrades" / f"{_norm(symbol)}.parquet"
 
 
-def cvd_parquet_path(symbol: str, timeframe: str, root: Path = DEFAULT_ROOT) -> Path:
-    return root / "cvd" / f"{_norm(symbol)}_{timeframe}.parquet"
+def cvd_csv_path(symbol: str, timeframe: str, root: Path = DEFAULT_ROOT) -> Path:
+    return root / "cvd" / f"{_norm(symbol)}_{timeframe}.csv"
