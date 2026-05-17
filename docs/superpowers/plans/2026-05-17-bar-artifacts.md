@@ -2,6 +2,8 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+> **Post-execution divergence note (2026-05-17):** examples in this plan use a fixed 4-digit width (`0001`..`0480`) for illustration. The shipped implementation uses `len(str(total_bars))` digits (so a 480-bar run produces `001`..`480`, a 65-bar run produces `01`..`65`). See `docs/bar_artifacts.md` for the canonical user-facing spec.
+
 **Goal:** Capture, for every single bar in a backtest, a self-contained folder holding every input the strategies saw and every output they emitted — so each candle decision can be audited, replayed, and presented as a one-page exhibit.
 
 **Architecture:**
