@@ -19,7 +19,8 @@ candle that the engine processed has its own folder under
 | `decision_output.json`     | LLM bot (Decision)  | Final action + confidence + regime-gate state  |
 
 Folder numbering is 1-based and zero-padded to the width of the total bar
-count for the run (a 480-bar run uses `0001` ... `0480`; a 65-bar run uses
-`01` ... `65`). Bars dropped during warmup or by the NaN guard still get a
-folder — the indicator file contains the partial scalars, and the LLM files
-are absent because the graph was not invoked.
+count for the run, i.e. `len(str(total_bars))` digits. A 480-bar run uses
+`001` ... `480`; a 65-bar run uses `01` ... `65`. Bars dropped during warmup
+or by the NaN guard still get a folder — the indicator file contains the
+partial scalars, and the LLM files are absent because the graph was not
+invoked.
