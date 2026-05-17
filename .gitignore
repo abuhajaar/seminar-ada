@@ -26,6 +26,9 @@ results/plots/
 htmlcov/
 uv.lock
 
+# Worktrees (used for isolated parallel subagent work)
+.worktrees/
+
 # OS
 .DS_Store
 Thumbs.db
