@@ -334,7 +334,7 @@ Sebaliknya, si analis senior tradisional megang satu posisi BUY selama dua ratus
 - LLM BUY: 5 × +$22 total
 - LLM SELL: 5 × **−$642 total**
 - Pasar bertren +5.8%; LLM mem-*fade* tren
-- LLM *avg hold* 37 *bar* vs Trad 95 *bar*
+- LLM *avg hold* 37 *bar* vs Trad 96 *bar*
 
 [SLIDE 25: Tiga Hipotesis Jujur]
 [27:00]

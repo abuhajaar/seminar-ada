@@ -333,7 +333,7 @@ By contrast, the traditional senior analyst held one BUY position for two hundre
 - LLM BUY: 5 × +$22 total
 - LLM SELL: 5 × **−$642 total**
 - Market trended +5.8%; LLM faded the trend
-- LLM avg hold 37 bars vs Trad 95 bars
+- LLM avg hold 37 bars vs Trad 96 bars
 
 [SLIDE 25: Three Honest Hypotheses]
 [27:00]
