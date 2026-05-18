@@ -517,6 +517,8 @@ async def test_llm_strategy_dumps_artifacts_when_sink_provided(tmp_path):
     # but the dumped decision keeps the consensus action.
     if not decision.get("regime_gate_overridden", False):
         assert decision["action"] == sig.action.value
-    # Chart PNG written by the strategy itself:
-    chart = folder / "chart.png"
-    assert chart.exists() and chart.stat().st_size > 0
+    # Chart PNG is written as `visual_input.png` by the recording client next
+    # to its prompt; the strategy no longer emits a duplicate `chart.png`.
+    visual_png = folder / "visual_input.png"
+    assert visual_png.exists() and visual_png.stat().st_size > 0
+    assert not (folder / "chart.png").exists(), "chart.png should no longer be written (duplicate of visual_input.png)"

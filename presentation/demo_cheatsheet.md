@@ -85,7 +85,7 @@ If `run.dump_bar_artifacts: true` was set in `config.yaml` for the run, every ca
 explorer.exe results\runs\<latest-timestamp>\BTC_USDT\bars\0123
 ```
 
-Inside that folder: `input_indicators.json` + `output_signal.json` (traditional side), `chart.png` + `technical_input.txt` / `visual_input.txt` / `qabba_input.txt` + the matching `*_output.json` files, and `decision_output.json` (LLM side). See `docs/bar_artifacts.md` for the full schema.
+Inside that folder: `input_indicators.json` + `output_signal.json` (traditional side), `visual_input.png` + `technical_input.txt` / `visual_input.txt` / `qabba_input.txt` + the matching `*_output.json` files, and `decision_output.json` (LLM side). See `docs/bar_artifacts.md` for the full schema.
 
 ## Files Worth Knowing By Heart
 

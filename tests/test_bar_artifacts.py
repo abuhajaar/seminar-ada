@@ -37,6 +37,6 @@ def test_sink_writes_json(tmp_path: Path):
 def test_sink_writes_png_bytes(tmp_path: Path):
     sink = BarArtifactSink(tmp_path / "bars" / "0001")
     payload = b"\x89PNG\r\n\x1a\n"
-    sink.write_bytes("chart.png", payload)
-    out = tmp_path / "bars" / "0001" / "chart.png"
+    sink.write_bytes("visual_input.png", payload)
+    out = tmp_path / "bars" / "0001" / "visual_input.png"
     assert out.read_bytes() == payload

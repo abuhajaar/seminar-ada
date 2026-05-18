@@ -8,11 +8,10 @@ candle that the engine processed has its own folder under
 |----------------------------|---------------------|------------------------------------------------|
 | `input_indicators.json`    | Traditional bot     | Indicator scalars fed into the SuperTrend rule |
 | `output_signal.json`       | Traditional bot     | Final Action / confidence / reasoning / stop   |
-| `chart.png`                | LLM bot (Visual)    | The exact candlestick image the Visual agent saw |
 | `technical_input.txt`      | LLM bot (Technical) | Rendered prompt sent to the technical analyst  |
 | `technical_output.json`    | LLM bot (Technical) | Raw response text from the analyst             |
 | `visual_input.txt`         | LLM bot (Visual)    | Rendered prompt sent to the visual analyst     |
-| `visual_input.png`         | LLM bot (Visual)    | Same as `chart.png` (kept beside its prompt)   |
+| `visual_input.png`         | LLM bot (Visual)    | The exact candlestick image the visual agent saw |
 | `visual_output.json`       | LLM bot (Visual)    | Raw response text                              |
 | `qabba_input.txt`          | LLM bot (QABBA)     | Rendered prompt for the QABBA analyst          |
 | `qabba_output.json`        | LLM bot (QABBA)     | Raw response text                              |

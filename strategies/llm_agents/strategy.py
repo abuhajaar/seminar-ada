@@ -155,15 +155,11 @@ class LLMAgentStrategy:
             window = list(self._bars)[-self.image_window_bars :]
             image_b64 = render_chart(window)
 
-        # When an artifact sink is attached, persist the chart bytes as the
-        # canonical per-bar exhibit (separate from `visual_input.png` which is
-        # written by `RecordingClient` next to its prompt — both contain the
-        # same bytes, but `chart.png` is the strategy-owned name used by the
-        # seminar's audit folder layout).
-        if ctx.artifact_sink is not None and image_b64 is not None:
-            import base64 as _b64
-
-            ctx.artifact_sink.write_bytes("chart.png", _b64.b64decode(image_b64))
+        # The chart bytes are persisted as `visual_input.png` by
+        # `RecordingClient` (next to `visual_input.txt`) — that filename is the
+        # single source of truth for "the exact image the visual agent saw".
+        # No separate `chart.png` is written: it would only ever be a duplicate
+        # and risks silently diverging from the agent's actual input later.
 
         # `bar_ts` is ms-since-epoch (cache key, spec Q2). `Bar.timestamp` is
         # tz-aware `datetime`; convert at the boundary so downstream nodes see

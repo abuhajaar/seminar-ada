@@ -188,7 +188,7 @@ async def run_async(
         # Build per-bar artifact sinks when the seminar's dump flag is on.
         # Both legs share the folder; file names don't collide (traditional
         # uses input_indicators.json / output_signal.json, LLM uses
-        # <agent>_*, chart.png, decision_output.json).
+        # <agent>_input.{txt,png} / <agent>_output.json / decision_output.json).
         trad_sink = None
         llm_sink = None
         if artifact_root is not None and total_bars is not None:
